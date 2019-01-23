@@ -3,3 +3,6 @@
 build/
 dist/
 *.spec
+.tox
+.coverage
+*egg-info

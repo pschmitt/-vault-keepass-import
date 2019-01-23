@@ -1,2 +1,7 @@
-git+https://github.com/ianunruh/hvac@master
-git+https://github.com/pschmitt/libkeepass@master
+hvac==0.7.2
+tox==3.7.0
+pytest==4.1.1
+coverage==4.5.2
+sh==1.12.14
+flake8==3.6.0
+libkeepass==0.3.0
