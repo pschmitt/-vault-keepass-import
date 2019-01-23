@@ -184,9 +184,9 @@ def export_to_vault(keepass_db, keepass_password, keepass_keyfile,
                 'creating a new one: "{}"'.format(entry_path, new_entry_path)
             )
             entry_path = new_entry_path
-        client.write(
+        return client.secrets.kv.v2.create_or_update_secret(
             entry_path,
-            **cleaned_entry
+            cleaned_entry
         )
 
 
