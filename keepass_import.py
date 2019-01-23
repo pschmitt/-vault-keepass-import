@@ -74,7 +74,7 @@ def export_entries_from_group(xmldata, group, parent_name=None,
     for e in entries:
         ed = get_entry_details(e)
         ed = dict(
-            (k.lower() if force_lowercase else k, v) for k, v in ed.iteritems()
+            (k.lower() if force_lowercase else k, v) for k, v in ed.items()
         )
         ed['_entry_name'] = clean_str(get_entry_name(e))
         ed['_path'] = clean_str('{}'.format(path))
