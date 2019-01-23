@@ -60,6 +60,7 @@ def get_group_name(group):
 def clean_str(string):
     return string.strip().strip('/').strip()
 
+
 def export_entries_from_group(xmldata, group, parent_name=None,
                               force_lowercase=False):
     group_name = get_group_name(group)
