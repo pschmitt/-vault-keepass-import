@@ -4,4 +4,4 @@ pytest==4.1.1
 coverage==4.5.2
 sh==1.12.14
 flake8==3.6.0
-libkeepass==0.3.0
+pykeepass==3.0.2

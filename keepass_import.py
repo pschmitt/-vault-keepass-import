@@ -6,13 +6,10 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 import argparse
-import base64
-import binascii
 import getpass
 import hvac
-import libkeepass
+from pykeepass import PyKeePass
 import logging
-import lxml.etree
 import os
 import re
 import requests
@@ -27,64 +24,6 @@ logging.getLogger('urllib3').setLevel(logging.CRITICAL)
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
-def safevalue(entry, path):
-    value = entry.find(path)
-    if value is None:
-        return None
-    elif value.text is None:
-        return None
-    elif value.text == '':
-        return None
-    else:
-        return value.text
-
-
-def get_entry_name(entry):
-    for path_choice in ['String[Key="Title"]/Value', 'String[Key="URL"]/Value', 'UUID']:
-        value = safevalue(entry, path_choice)
-        if value:
-            if path_choice == 'UUID':
-                return '<UUID:{}>'.format(binascii.hexlify(base64.b64decode(value)).decode())
-            else:
-                return value
-
-
-def get_entry_details(entry):
-    return {e.find('Key').text: e.find('Value').text for e in entry.findall('String')}
-
-
-def get_group_name(group):
-    return group.find('Name').text
-
-
-def clean_str(string):
-    return string.strip().strip('/').strip()
-
-
-def export_entries_from_group(xmldata, group, parent_name=None,
-                              force_lowercase=False):
-    group_name = get_group_name(group)
-    path = '{}{}'.format(
-        parent_name if parent_name else '',
-        group_name if group_name else ''
-    )
-    entries = group.findall('Entry')
-    groups = group.findall('Group')
-    total_entries = []
-    for e in entries:
-        ed = get_entry_details(e)
-        ed = dict(
-            (k.lower() if force_lowercase else k, v) for k, v in ed.items()
-        )
-        ed['_entry_name'] = clean_str(get_entry_name(e))
-        ed['_path'] = clean_str('{}'.format(path))
-        total_entries.append(ed)
-    for g in groups:
-        sub_entries = export_entries_from_group(
-            xmldata, g, '{}/'.format(path if path else ''), force_lowercase
-        )
-        total_entries += sub_entries
-    return total_entries
 
 
 def export_entries(filename, password, keyfile=None, force_lowercase=False,
