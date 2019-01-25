@@ -24,6 +24,12 @@ logging.getLogger('urllib3').setLevel(logging.CRITICAL)
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
+def get_path(entry):
+    path = entry.parentgroup.path
+    if path[0] == '/':
+        return entry.title
+    else:
+        return path + '/' + entry.title
 
 
 def export_entries(filename, password, keyfile=None, force_lowercase=False,
