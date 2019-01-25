@@ -49,17 +49,13 @@ def reset_vault_backend(vault_url, vault_token, vault_backend,
         url=vault_url, token=vault_token, verify=ssl_verify
     )
     try:
-        client.disable_secret_backend(vault_backend)
+        client.sys.disable_secrets_engine(path=vault_backend)
     except hvac.exceptions.InvalidRequest as e:
         if e.message == 'no matching mount':
             logging.debug('Could not delete backend: Mount point not found.')
         else:
             raise
-    client.enable_secret_backend(
-        backend_type='generic',
-        description='KeePass import',
-        mount_point=vault_backend,
-    )
+    client.sys.enable_secrets_engine(backend_type='kv', path=vault_backend)
 
 
 def find_similar_entries(vault_url, vault_token, entry_name, ssl_verify=True):
