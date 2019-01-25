@@ -58,27 +58,37 @@ def reset_vault_backend(vault_url, vault_token, vault_backend,
     client.sys.enable_secrets_engine(backend_type='kv', path=vault_backend)
 
 
-def find_similar_entries(vault_url, vault_token, entry_name, ssl_verify=True):
-    client = hvac.Client(
-        url=vault_url, token=vault_token, verify=ssl_verify
+def get_next_similar_entry_index(vault_url, vault_token, entry_name, ssl_verify=True):
+    client = hvac.Client(url=vault_url, token=vault_token, verify=ssl_verify)
+    index = 0
+    try:
+        title = os.path.basename(entry_name)
+        children = client.secrets.kv.v2.list_secrets(os.path.dirname(entry_name))
+        for child in children['data']['keys']:
+            m = re.match(title + r' \((\d+)\)$', child)
+            if m:
+                index = max(index, int(m.group(1)))
+    except hvac.exceptions.InvalidPath:
+        pass
+    except Exception:
+        raise
+    return index + 1
+
+
+def generate_entry_path(vault_url, vault_token, entry_path,
+                        ssl_verify=True):
+    next_entry_index = get_next_similar_entry_index(
+        vault_url, vault_token, entry_path, ssl_verify
     )
-    entry = client.read(entry_name)
-    entries = [entry] if entry else []
-    index = 2
-    while True:
-        entry = client.read('{} ({})'.format(entry_name, index))
-        if entry:
-            entries.append(entry)
-        else:
-            return entries
-        index += 1
+    new_entry_path = '{} ({})'.format(entry_path, next_entry_index)
+    logger.info(
+        'Entry "{}" already exists, '
+        'creating a new one: "{}"'.format(entry_path, new_entry_path)
+    )
+    return new_entry_path
 
 
-def get_next_similar_entry_index(vault_url, vault_token, entry_name,
-                                 ssl_verify=True):
-    return len(find_similar_entries(
-        vault_url, vault_token, entry_name, ssl_verify
-    )) + 1
+
 
 
 def export_to_vault(keepass_db, keepass_password, keepass_keyfile,
