@@ -24,12 +24,12 @@ logging.getLogger('urllib3').setLevel(logging.CRITICAL)
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
-def get_path(entry):
+def get_path(vault_backend, entry):
     path = entry.parentgroup.path
     if path[0] == '/':
-        return entry.title
+        return vault_backend + '/' + entry.title
     else:
-        return path + '/' + entry.title
+        return vault_backend + '/' + path + '/' + entry.title
 
 
 def export_entries(filename, password, keyfile=None, skip_root=False):
@@ -116,7 +116,7 @@ def export_to_vault(keepass_db, keepass_password, keepass_keyfile,
     r = {}
     for e in entries:
         entry = keepass_entry_to_dict(e)
-        entry_path = get_path(e)
+        entry_path = get_path(vault_backend, e)
         if force_lowercase:
             entry_path = entry_path.lower()
         logger.debug(f'INSERT {entry_path} {entry}')
