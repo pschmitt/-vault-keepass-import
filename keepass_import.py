@@ -32,22 +32,15 @@ def get_path(entry):
         return path + '/' + entry.title
 
 
-def export_entries(filename, password, keyfile=None, force_lowercase=False,
-                   skip_root=False):
-    with libkeepass.open(filename, password=password, keyfile=keyfile) as kdb:
-        xmldata = lxml.etree.fromstring(kdb.pretty_print())
-        tree = lxml.etree.ElementTree(xmldata)
-        root_group = tree.xpath('/KeePassFile/Root/Group')[0]
-        all_entries = export_entries_from_group(
-            xmldata, root_group, force_lowercase=force_lowercase
-        )
-        if skip_root:
-            regex = re.compile(r'^{}/?'.format(get_group_name(root_group)))
-            for e in all_entries:
-                e['_path'] = regex.sub('', e['_path'])
-
-        logger.info('Total entries: {}'.format(len(all_entries)))
-        return all_entries
+def export_entries(filename, password, keyfile=None, skip_root=False):
+    all_entries = []
+    with PyKeePass(filename, password=password, keyfile=keyfile) as kp:
+        for entry in kp.entries:
+            if skip_root and entry.parentgroup.path == '/':
+                continue
+            all_entries.append(entry)
+    logger.info('Total entries: {}'.format(len(all_entries)))
+    return all_entries
 
 
 def reset_vault_backend(vault_url, vault_token, vault_backend,
