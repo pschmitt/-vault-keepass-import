@@ -88,51 +88,57 @@ def generate_entry_path(vault_url, vault_token, entry_path,
     return new_entry_path
 
 
+def keepass_entry_to_dict(e):
+    entry = {}
+    for k in ('username', 'password', 'url', 'notes', 'tags', 'expires', 'icon', 'uuid'):
+        if getattr(e, k):
+            entry[k] = getattr(e, k)
+    for k in ('expiry_time', 'ctime', 'atime', 'mtime'):
+        if getattr(e, k):
+            entry[k] = getattr(e, k).timestamp()
+    return entry
 
+
+def vault_entry_to_dict(e):
+    return e['data']['data']
 
 
 def export_to_vault(keepass_db, keepass_password, keepass_keyfile,
                     vault_url, vault_token, vault_backend, ssl_verify=True,
-                    force_lowercase=False, skip_root=False):
+                    force_lowercase=False, skip_root=False, allow_duplicates=True):
     entries = export_entries(
-        keepass_db, keepass_password, keepass_keyfile, force_lowercase,
+        keepass_db, keepass_password, keepass_keyfile,
         skip_root
     )
     client = hvac.Client(
         url=vault_url, token=vault_token, verify=ssl_verify
     )
-    ignored_indexes = [
-        '_entry_name', '_path',
-        'title' if force_lowercase else 'Title'
-    ]
+    r = {}
     for e in entries:
-        cleaned_entry = {k: v for k, v in e.items() if k not in ignored_indexes}
-        entry_path = '{}/{}{}'.format(
-            vault_backend,
-            e['_path'] + '/' if e['_path'] else '',
-            e['_entry_name']
-        )
-        logger.debug(
-            'INSERT: "{}" to "{}"'.format(
-                e['_entry_name'],
-                entry_path
-            )
-        )
-        if client.read(entry_path):
-            # There already is an entry at this path
-            next_entry_index = get_next_similar_entry_index(
-                vault_url, vault_token, entry_path, ssl_verify
-            )
-            new_entry_path = '{} ({})'.format(entry_path, next_entry_index)
-            logger.info(
-                'Entry "{}" already exists, '
-                'creating a new one: "{}"'.format(entry_path, new_entry_path)
-            )
-            entry_path = new_entry_path
-        return client.secrets.kv.v2.create_or_update_secret(
-            entry_path,
-            cleaned_entry
-        )
+        entry = keepass_entry_to_dict(e)
+        entry_path = get_path(e)
+        if force_lowercase:
+            entry_path = entry_path.lower()
+        logger.debug(f'INSERT {entry_path} {entry}')
+        try:
+            exists = client.secrets.kv.v2.read_secret_version(entry_path)
+        except hvac.exceptions.InvalidPath:
+            exists = None
+        except Exception:
+            raise
+        if allow_duplicates:
+            if exists:
+                entry_path = generate_entry_path(vault_url, vault_token, entry_path, ssl_verify)
+            r[entry_path] = 'changed'
+        else:
+            if exists:
+                r[entry_path] = entry == vault_entry_to_dict(exists) and 'ok' or 'changed'
+            else:
+                r[entry_path] = 'changed'
+        logger.info(f'{r[entry_path]}: {entry_path} => {entry}')
+        if r[entry_path] == 'changed':
+            client.secrets.kv.v2.create_or_update_secret(entry_path, entry)
+    return r
 
 
 if __name__ == '__main__':
@@ -171,6 +177,12 @@ if __name__ == '__main__':
         action='store_true',
         required=False,
         help='Skip KeePass root folder (shorter paths)'
+    )
+    parser.add_argument(
+        '--idempotent',
+        action='store_true',
+        required=False,
+        help='An entry is overriden if it already exists, unless it is up to date'
     )
     parser.add_argument(
         '-b', '--backend',
@@ -220,5 +232,6 @@ if __name__ == '__main__':
         vault_backend=args.backend,
         ssl_verify=not args.ssl_no_verify,
         force_lowercase=args.lowercase,
-        skip_root=args.skip_root
+        skip_root=args.skip_root,
+        allow_duplicates=not args.idempotent
     )
