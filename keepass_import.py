@@ -90,10 +90,12 @@ def generate_entry_path(vault_url, vault_token, entry_path,
 
 def keepass_entry_to_dict(e):
     entry = {}
-    for k in ('username', 'password', 'url', 'notes', 'tags', 'expires', 'icon', 'uuid'):
+    for k in ('username', 'password', 'url', 'notes', 'tags', 'icon', 'uuid'):
         if getattr(e, k):
             entry[k] = getattr(e, k)
-    for k in ('expiry_time', 'ctime', 'atime', 'mtime'):
+    if e.expires:
+        entry['expiry_time'] = e.expiry_time.timestamp()
+    for k in ('ctime', 'atime', 'mtime'):
         if getattr(e, k):
             entry[k] = getattr(e, k).timestamp()
     return entry
