@@ -1,0 +1,6 @@
+tox==3.7.0
+pytest==4.1.1
+coverage==4.5.2
+flake8==3.6.0
+pip-tools==3.3.2
+sphinx==1.8.3
