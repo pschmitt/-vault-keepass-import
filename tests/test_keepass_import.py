@@ -1,26 +1,18 @@
 from vault_keepass_import import main
-import sh
-import os
 import pytest
 import requests
 import time
 
 
-def test_export_to_vault_duplicates():
-    token = 'mytoken'
-    container = 'test-import-keepass'
-    sh.docker('rm', '-f', container, _ok_code=[1, 0])
-    sh.docker('run', '-e', f'VAULT_DEV_ROOT_TOKEN_ID={token}', '-p', '8200:8200',
-              '--rm', '--cap-add=IPC_LOCK', '-d', f'--name={container}', 'vault')
-
+def test_export_to_vault_duplicates(vault_server):
     def run_import():
         return main.export_to_vault(
             keepass_db='tests/test_db.kdbx',
             keepass_password='master1',
             keepass_keyfile=None,
-            vault_url='http://127.0.0.1:8200',
+            vault_url=vault_server['http'],
             vault_backend='keepass',
-            vault_token=token)
+            vault_token=vault_server['token'])
 
     for _ in range(60):
         try:
@@ -42,24 +34,17 @@ def test_export_to_vault_duplicates():
                   'keepass/Group1/title1group1 (2)': 'changed',
                   'keepass/Group1/Group1a/title1group1a (2)': 'changed',
                   'keepass/withattachement (2)': 'changed'}
-    sh.docker('rm', '-f', container, _ok_code=[1, 0])
 
 
-def test_export_to_vault_no_duplicates():
-    token = 'mytoken'
-    container = 'test-import-keepass'
-    sh.docker('rm', '-f', container, _ok_code=[1, 0])
-    sh.docker('run', '-e', f'VAULT_DEV_ROOT_TOKEN_ID={token}', '-p', '8200:8200',
-              '--rm', '--cap-add=IPC_LOCK', '-d', f'--name={container}', 'vault')
-
+def test_export_to_vault_no_duplicates(vault_server):
     def run_import():
         return main.export_to_vault(
             keepass_db='tests/test_db.kdbx',
             keepass_password='master1',
             keepass_keyfile=None,
-            vault_url='http://127.0.0.1:8200',
-            vault_token=token,
+            vault_url=vault_server['http'],
             vault_backend='keepass',
+            vault_token=vault_server['token'],
             allow_duplicates=False)
 
     for _ in range(60):
@@ -79,25 +64,17 @@ def test_export_to_vault_no_duplicates():
     # idempotent
     r3 = run_import()
     assert r2 == r3
-    sh.docker('rm', '-f', container, _ok_code=[1, 0])
 
 
-def test_export_to_vault_reset():
-    token = 'mytoken'
-    container = 'test-import-keepass'
-    url = 'http://127.0.0.1:8200'
-    sh.docker('rm', '-f', container, _ok_code=[1, 0])
-    sh.docker('run', '-e', f'VAULT_DEV_ROOT_TOKEN_ID={token}', '-p', '8200:8200',
-              '--rm', '--cap-add=IPC_LOCK', '-d', f'--name={container}', 'vault')
-
+def test_export_to_vault_reset(vault_server):
     def run_import():
         return main.export_to_vault(
             keepass_db='tests/test_db.kdbx',
             keepass_password='master1',
             keepass_keyfile=None,
-            vault_url=url,
+            vault_url=vault_server['http'],
             vault_backend='keepass',
-            vault_token=token)
+            vault_token=vault_server['token'])
 
     for _ in range(60):
         try:
@@ -109,75 +86,27 @@ def test_export_to_vault_reset():
                   'keepass/Group1/title1group1': 'changed',
                   'keepass/Group1/Group1a/title1group1a': 'changed',
                   'keepass/withattachement': 'changed'}
-    main.reset_vault_backend(vault_url=url, vault_token=token, vault_backend='secrets')
+    main.reset_vault_backend(vault_url=vault_server['http'],
+                             vault_token=vault_server['token'],
+                             vault_backend='secrets')
     r1 = run_import()
     assert r1 == {'keepass/title1 (1)': 'changed',
                   'keepass/Group1/title1group1 (1)': 'changed',
                   'keepass/Group1/Group1a/title1group1a (1)': 'changed',
                   'keepass/withattachement (1)': 'changed'}
-    sh.docker('rm', '-f', container, _ok_code=[1, 0])
 
 
-def test_client_cert(tmpdir):
-    tmppath = str(tmpdir)
-    opensslconfig = tmppath + '/opensslconfig'
-    open(opensslconfig, 'w').write("""
-        [ req ]
-        default_bits           = 2048
-        default_keyfile        = keyfile.pem
-        distinguished_name     = req_distinguished_name
-        attributes             = req_attributes
-        prompt                 = no
-        output_password        = mypass
-
-        [ req_distinguished_name ]
-        C                      = GB
-        ST                     = Test State or Province
-        L                      = Test Locality
-        O                      = Organization Name
-        OU                     = Organizational Unit Name
-        CN                     = Common Name
-        emailAddress           = test@email.address
-
-        [ req_attributes ]
-        challengePassword              = A challenge password
-    """)
-    sh.openssl.req(
-        '-config', opensslconfig,
-        '-nodes', '-new', '-x509', '-keyout', 'server.key', '-out', 'server.crt',
-        _cwd=tmppath)
-    os.chmod(tmppath + '/server.key', 0o644)
-    config = tmppath + '/config.hcl'
-    open(config, 'w').write("""
-    listener tcp {
-       address     = "0.0.0.0:8300"
-
-       tls_cert_file                      = "/etc/test_ssl/server.crt"
-       tls_key_file                       = "/etc/test_ssl/server.key"
-       tls_client_ca_file                 = "/etc/test_ssl/server.crt"
-       tls_require_and_verify_client_cert = true
-    }
-    """)
-    token = 'mytoken'
-    container = 'test-import-keepass'
-    sh.docker('rm', '-f', container, _ok_code=[1, 0])
-    sh.docker('run', '-e', f'VAULT_DEV_ROOT_TOKEN_ID={token}', '-p', '8200:8200',
-              '-p', '8300:8300',
-              '-v', f'{config}:/vault/config/config.hcl',
-              '-v', f'{tmppath}:/etc/test_ssl',
-              '-d',
-              '--rm', '--cap-add=IPC_LOCK', f'--name={container}', 'vault')
-
+def test_client_cert(vault_server):
     def run_import():
         return main.export_to_vault(
             keepass_db='tests/test_db.kdbx',
             keepass_password='master1',
             keepass_keyfile=None,
-            vault_url='https://127.0.0.1:8300',
+            vault_url=vault_server['https'],
             vault_backend='keepass',
-            vault_token=token,
+            vault_token=vault_server['token'],
             ssl_verify=False,
-            cert=(tmppath + '/server.crt', tmppath + '/server.key'))
+            cert=(vault_server['crt'], vault_server['key']))
 
     for _ in range(60):
         try:
@@ -196,9 +125,7 @@ def test_client_cert(tmpdir):
             keepass_db='tests/test_db.kdbx',
             keepass_password='master1',
             keepass_keyfile=None,
-            vault_url='https://127.0.0.1:8300',
+            vault_url=vault_server['https'],
             vault_backend='keepass',
-            vault_token=token,
+            vault_token=vault_server['token'],
             ssl_verify=False)
-
-    sh.docker('rm', '-f', container, _ok_code=[1, 0])
