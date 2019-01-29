@@ -144,7 +144,7 @@ def export_to_vault(keepass_db, keepass_password, keepass_keyfile,
     return r
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '-p', '--password',

@@ -1,4 +1,4 @@
-import keepass_import
+from vault_keepass_import import main
 import sh
 import os
 import pytest
@@ -14,8 +14,8 @@ def test_export_to_vault_duplicates():
               '--rm', '--cap-add=IPC_LOCK', '-d', f'--name={container}', 'vault')
 
     def run_import():
-        return keepass_import.export_to_vault(
-            keepass_db='test_db.kdbx',
+        return main.export_to_vault(
+            keepass_db='tests/test_db.kdbx',
             keepass_password='master1',
             keepass_keyfile=None,
             vault_url='http://127.0.0.1:8200',
@@ -50,8 +50,8 @@ def test_export_to_vault_no_duplicates():
               '--rm', '--cap-add=IPC_LOCK', '-d', f'--name={container}', 'vault')
 
     def run_import():
-        return keepass_import.export_to_vault(
-            keepass_db='test_db.kdbx',
+        return main.export_to_vault(
+            keepass_db='tests/test_db.kdbx',
             keepass_password='master1',
             keepass_keyfile=None,
             vault_url='http://127.0.0.1:8200',
@@ -87,8 +87,8 @@ def test_export_to_vault_reset():
               '--rm', '--cap-add=IPC_LOCK', '-d', f'--name={container}', 'vault')
 
     def run_import():
-        return keepass_import.export_to_vault(
-            keepass_db='test_db.kdbx',
+        return main.export_to_vault(
+            keepass_db='tests/test_db.kdbx',
             keepass_password='master1',
             keepass_keyfile=None,
             vault_url=url,
@@ -104,7 +104,7 @@ def test_export_to_vault_reset():
     assert r0 == {'keepass/title1': 'changed',
                   'keepass/Group1/title1group1': 'changed',
                   'keepass/Group1/Group1a/title1group1a': 'changed'}
-    keepass_import.reset_vault_backend(vault_url=url, vault_token=token, vault_backend='secrets')
+    main.reset_vault_backend(vault_url=url, vault_token=token, vault_backend='secrets')
     r1 = run_import()
     assert r1 == {'keepass/title1 (1)': 'changed',
                   'keepass/Group1/title1group1 (1)': 'changed',
@@ -163,8 +163,8 @@ def test_client_cert(tmpdir):
               '--rm', '--cap-add=IPC_LOCK', f'--name={container}', 'vault')
 
     def run_import():
-        return keepass_import.export_to_vault(
-            keepass_db='test_db.kdbx',
+        return main.export_to_vault(
+            keepass_db='tests/test_db.kdbx',
             keepass_password='master1',
             keepass_keyfile=None,
             vault_url='https://127.0.0.1:8300',
@@ -185,8 +185,8 @@ def test_client_cert(tmpdir):
                   'keepass/Group1/Group1a/title1group1a': 'changed'}
 
     with pytest.raises(requests.exceptions.SSLError):
-        keepass_import.export_to_vault(
-            keepass_db='test_db.kdbx',
+        main.export_to_vault(
+            keepass_db='tests/test_db.kdbx',
             keepass_password='master1',
             keepass_keyfile=None,
             vault_url='https://127.0.0.1:8300',
