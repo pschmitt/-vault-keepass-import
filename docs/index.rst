@@ -78,8 +78,19 @@ Command help
 
    vault-keepass-import --help
 
+Reference
+=========
+
+Data conversion
+~~~~~~~~~~~~~~~
+
+* `mtime`, `ctime`, `atime` are always imported and converted to `epoch <https://en.wikipedia.org/wiki/Unix_time>`_
+* `expiry_time` is only imported if set and converted to `epoch <https://en.wikipedia.org/wiki/Unix_time>`_
+* `username`, `password`, `url`, `notes`, `tags`, `uuid` are imported as is
+* `attachments` are imported with a key set to **id/filename** and the value as is (for instance if there only is one **foo.txt** attachment, it will have the key **0/foo.txt**)
+
 Contributions
-~~~~~~~~~~~~~
+=============
 
 .. toctree::
   :maxdepth: 2

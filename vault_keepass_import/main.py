@@ -98,6 +98,8 @@ def keepass_entry_to_dict(e):
     for k in ('ctime', 'atime', 'mtime'):
         if getattr(e, k):
             entry[k] = getattr(e, k).timestamp()
+    for a in e.attachments:
+        entry[f'{a.id}/{a.filename}'] = a.data.decode('utf-8')
     return entry
 
 

@@ -30,15 +30,18 @@ def test_export_to_vault_duplicates():
             time.sleep(1)
     assert r0 == {'keepass/title1': 'changed',
                   'keepass/Group1/title1group1': 'changed',
-                  'keepass/Group1/Group1a/title1group1a': 'changed'}
+                  'keepass/Group1/Group1a/title1group1a': 'changed',
+                  'keepass/withattachement': 'changed'}
     r1 = run_import()
     assert r1 == {'keepass/title1 (1)': 'changed',
                   'keepass/Group1/title1group1 (1)': 'changed',
-                  'keepass/Group1/Group1a/title1group1a (1)': 'changed'}
+                  'keepass/Group1/Group1a/title1group1a (1)': 'changed',
+                  'keepass/withattachement (1)': 'changed'}
     r2 = run_import()
     assert r2 == {'keepass/title1 (2)': 'changed',
                   'keepass/Group1/title1group1 (2)': 'changed',
-                  'keepass/Group1/Group1a/title1group1a (2)': 'changed'}
+                  'keepass/Group1/Group1a/title1group1a (2)': 'changed',
+                  'keepass/withattachement (2)': 'changed'}
     sh.docker('rm', '-f', container, _ok_code=[1, 0])
 
 
@@ -67,7 +70,8 @@ def test_export_to_vault_no_duplicates():
             time.sleep(1)
     assert r1 == {'keepass/title1': 'changed',
                   'keepass/Group1/title1group1': 'changed',
-                  'keepass/Group1/Group1a/title1group1a': 'changed'}
+                  'keepass/Group1/Group1a/title1group1a': 'changed',
+                  'keepass/withattachement': 'changed'}
     # converged
     r2 = run_import()
     assert all(map(lambda x: x == 'ok', r2.values()))
@@ -103,12 +107,14 @@ def test_export_to_vault_reset():
             time.sleep(1)
     assert r0 == {'keepass/title1': 'changed',
                   'keepass/Group1/title1group1': 'changed',
-                  'keepass/Group1/Group1a/title1group1a': 'changed'}
+                  'keepass/Group1/Group1a/title1group1a': 'changed',
+                  'keepass/withattachement': 'changed'}
     main.reset_vault_backend(vault_url=url, vault_token=token, vault_backend='secrets')
     r1 = run_import()
     assert r1 == {'keepass/title1 (1)': 'changed',
                   'keepass/Group1/title1group1 (1)': 'changed',
-                  'keepass/Group1/Group1a/title1group1a (1)': 'changed'}
+                  'keepass/Group1/Group1a/title1group1a (1)': 'changed',
+                  'keepass/withattachement (1)': 'changed'}
     sh.docker('rm', '-f', container, _ok_code=[1, 0])
 
 
@@ -182,7 +188,8 @@ def test_client_cert(tmpdir):
             time.sleep(1)
     assert r0 == {'keepass/title1': 'changed',
                   'keepass/Group1/title1group1': 'changed',
-                  'keepass/Group1/Group1a/title1group1a': 'changed'}
+                  'keepass/Group1/Group1a/title1group1a': 'changed',
+                  'keepass/withattachement': 'changed'}
 
     with pytest.raises(requests.exceptions.SSLError):
         main.export_to_vault(

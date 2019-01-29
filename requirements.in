@@ -1,4 +1,4 @@
 hvac==0.7.2
 sh==1.12.14
-pykeepass==3.0.2
+-e git+https://lab.enough.community/singuliere/pykeepass.git@6d732e7738f62e2b1437755f6d9943d7da292407#egg=pykeepass
 pbr==5.1.1

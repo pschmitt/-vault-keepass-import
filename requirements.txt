@@ -4,19 +4,20 @@
 #
 #    pip-compile --output-file requirements.txt requirements.in
 #
-argon2-cffi==19.1.0       # via pykeepass
+-e git+https://lab.enough.community/singuliere/pykeepass.git@6d732e7738f62e2b1437755f6d9943d7da292407#egg=pykeepass
+argon2-cffi==19.1.0
 certifi==2018.11.29       # via requests
 cffi==1.11.5              # via argon2-cffi
 chardet==3.0.4            # via requests
-construct==2.9.45         # via pykeepass
+construct==2.9.45
+future==0.17.1
 hvac==0.7.2
 idna==2.8                 # via requests
-lxml==4.3.0               # via pykeepass
+lxml==4.3.0
 pbr==5.1.1
 pycparser==2.19           # via cffi
-pycryptodome==3.7.3       # via pykeepass
-pykeepass==3.0.2
-python-dateutil==2.7.5    # via pykeepass
+pycryptodome==3.7.3
+python-dateutil==2.7.5
 requests==2.21.0          # via hvac
 sh==1.12.14
 six==1.12.0               # via argon2-cffi, python-dateutil
