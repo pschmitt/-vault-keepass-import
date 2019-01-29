@@ -4,7 +4,6 @@
 
 from __future__ import print_function
 from __future__ import unicode_literals
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
 import argparse
 import getpass
 import hvac
@@ -12,7 +11,6 @@ from pykeepass import PyKeePass
 import logging
 import os
 import re
-import requests
 
 
 logging.basicConfig(level=logging.DEBUG)

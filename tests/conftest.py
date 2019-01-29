@@ -1,6 +1,9 @@
-import sh
+import hvac
 import os
 import pytest
+import requests
+import sh
+import time
 
 
 @pytest.fixture
@@ -56,6 +59,19 @@ def vault_server(tmpdir):
               '--rm', '--cap-add=IPC_LOCK', f'--name={container}', 'vault')
     crt = tmppath + '/server.crt'
     key = tmppath + '/server.key'
+
+    client = hvac.Client(
+        url='http://127.0.0.1:8200', token=token, cert=(crt, key), verify=False
+    )
+    for _ in range(60):
+        try:
+            client.sys.read_health_status()
+            break
+        except requests.exceptions.ConnectionError:
+            time.sleep(1)
+
+    client.sys.read_health_status()
+
     yield {
         'token': token,
         'http': 'http://127.0.0.1:8200',
@@ -63,4 +79,5 @@ def vault_server(tmpdir):
         'crt': crt,
         'key': key,
     }
+
     sh.docker('rm', '-f', container, _ok_code=[1, 0])

@@ -1,7 +1,6 @@
 from vault_keepass_import import main
 import pytest
 import requests
-import time
 
 
 def test_export_to_vault_duplicates(vault_server):
@@ -14,12 +13,7 @@ def test_export_to_vault_duplicates(vault_server):
             vault_backend='keepass',
             vault_token=vault_server['token'])
 
-    for _ in range(60):
-        try:
-            r0 = run_import()
-            break
-        except requests.exceptions.ConnectionError:
-            time.sleep(1)
+    r0 = run_import()
     assert r0 == {'keepass/title1': 'changed',
                   'keepass/Group1/title1group1': 'changed',
                   'keepass/Group1/Group1a/title1group1a': 'changed',
@@ -47,12 +41,7 @@ def test_export_to_vault_no_duplicates(vault_server):
             vault_token=vault_server['token'],
             allow_duplicates=False)
 
-    for _ in range(60):
-        try:
-            r1 = run_import()
-            break
-        except requests.exceptions.ConnectionError:
-            time.sleep(1)
+    r1 = run_import()
     assert r1 == {'keepass/title1': 'changed',
                   'keepass/Group1/title1group1': 'changed',
                   'keepass/Group1/Group1a/title1group1a': 'changed',
@@ -76,12 +65,7 @@ def test_export_to_vault_reset(vault_server):
             vault_backend='keepass',
             vault_token=vault_server['token'])
 
-    for _ in range(60):
-        try:
-            r0 = run_import()
-            break
-        except requests.exceptions.ConnectionError:
-            time.sleep(1)
+    r0 = run_import()
     assert r0 == {'keepass/title1': 'changed',
                   'keepass/Group1/title1group1': 'changed',
                   'keepass/Group1/Group1a/title1group1a': 'changed',
@@ -108,13 +92,7 @@ def test_client_cert(vault_server):
             ssl_verify=False,
             cert=(vault_server['crt'], vault_server['key']))
 
-    for _ in range(60):
-        try:
-            r0 = run_import()
-            break
-        except requests.exceptions.ConnectionError as e:
-            print(str(e))
-            time.sleep(1)
+    r0 = run_import()
     assert r0 == {'keepass/title1': 'changed',
                   'keepass/Group1/title1group1': 'changed',
                   'keepass/Group1/Group1a/title1group1a': 'changed',
