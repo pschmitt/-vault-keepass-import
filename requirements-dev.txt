@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file requirements-dev.txt requirements.in requirements-dev.in
 #
--e git+https://lab.enough.community/singuliere/pykeepass.git@6d732e7738f62e2b1437755f6d9943d7da292407#egg=pykeepass
+-e git+https://github.com/pschmitt/pykeepass.git@193b39177f79d2d616daab5c7da3a3146f725986#egg=pykeepass
 alabaster==0.7.12         # via sphinx
 argon2-cffi==19.1.0
 atomicwrites==1.2.1       # via pytest

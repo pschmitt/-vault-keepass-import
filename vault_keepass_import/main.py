@@ -34,11 +34,11 @@ def get_path(vault_backend, entry):
 
 def export_entries(filename, password, keyfile=None, skip_root=False):
     all_entries = []
-    with PyKeePass(filename, password=password, keyfile=keyfile) as kp:
-        for entry in kp.entries:
-            if skip_root and entry.parentgroup.path == '/':
-                continue
-            all_entries.append(entry)
+    kp = PyKeePass(filename, password=password, keyfile=keyfile)
+    for entry in kp.entries:
+        if skip_root and entry.parentgroup.path == '/':
+            continue
+        all_entries.append(entry)
     logger.info('Total entries: {}'.format(len(all_entries)))
     return all_entries
 
