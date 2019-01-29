@@ -44,9 +44,9 @@ def export_entries(filename, password, keyfile=None, skip_root=False):
 
 
 def reset_vault_backend(vault_url, vault_token, vault_backend,
-                        ssl_verify=True):
+                        cert=None, ssl_verify=True):
     client = hvac.Client(
-        url=vault_url, token=vault_token, verify=ssl_verify
+        url=vault_url, token=vault_token, cert=cert, verify=ssl_verify
     )
     try:
         client.sys.disable_secrets_engine(path=vault_backend)
@@ -58,8 +58,8 @@ def reset_vault_backend(vault_url, vault_token, vault_backend,
     client.sys.enable_secrets_engine(backend_type='kv', path=vault_backend)
 
 
-def get_next_similar_entry_index(vault_url, vault_token, entry_name, ssl_verify=True):
-    client = hvac.Client(url=vault_url, token=vault_token, verify=ssl_verify)
+def get_next_similar_entry_index(vault_url, vault_token, entry_name, cert=None, ssl_verify=True):
+    client = hvac.Client(url=vault_url, token=vault_token, cert=cert, verify=ssl_verify)
     index = 0
     try:
         title = os.path.basename(entry_name)
@@ -76,9 +76,9 @@ def get_next_similar_entry_index(vault_url, vault_token, entry_name, ssl_verify=
 
 
 def generate_entry_path(vault_url, vault_token, entry_path,
-                        ssl_verify=True):
+                        cert=None, ssl_verify=True):
     next_entry_index = get_next_similar_entry_index(
-        vault_url, vault_token, entry_path, ssl_verify
+        vault_url, vault_token, entry_path, cert, ssl_verify
     )
     new_entry_path = '{} ({})'.format(entry_path, next_entry_index)
     logger.info(
@@ -106,14 +106,14 @@ def vault_entry_to_dict(e):
 
 
 def export_to_vault(keepass_db, keepass_password, keepass_keyfile,
-                    vault_url, vault_token, vault_backend, ssl_verify=True,
+                    vault_url, vault_token, vault_backend, cert=None, ssl_verify=True,
                     force_lowercase=False, skip_root=False, allow_duplicates=True):
     entries = export_entries(
         keepass_db, keepass_password, keepass_keyfile,
         skip_root
     )
     client = hvac.Client(
-        url=vault_url, token=vault_token, verify=ssl_verify
+        url=vault_url, token=vault_token, cert=cert, verify=ssl_verify
     )
     r = {}
     for e in entries:
@@ -130,7 +130,8 @@ def export_to_vault(keepass_db, keepass_password, keepass_keyfile,
             raise
         if allow_duplicates:
             if exists:
-                entry_path = generate_entry_path(vault_url, vault_token, entry_path, ssl_verify)
+                entry_path = generate_entry_path(
+                    vault_url, vault_token, entry_path, cert, ssl_verify)
             r[entry_path] = 'changed'
         else:
             if exists:
@@ -181,6 +182,16 @@ if __name__ == '__main__':
         help='Skip KeePass root folder (shorter paths)'
     )
     parser.add_argument(
+        '--client-cert',
+        required=False,
+        help='client cert file'
+    )
+    parser.add_argument(
+        '--client-key',
+        required=False,
+        help='client key file'
+    )
+    parser.add_argument(
         '--idempotent',
         action='store_true',
         required=False,
@@ -222,6 +233,7 @@ if __name__ == '__main__':
         reset_vault_backend(
             vault_url=args.vault,
             vault_token=token,
+            cert=(args.client_cert, args.client_key),
             ssl_verify=not args.ssl_no_verify,
             vault_backend=args.backend
         )
@@ -232,6 +244,7 @@ if __name__ == '__main__':
         vault_url=args.vault,
         vault_token=token,
         vault_backend=args.backend,
+        cert=(args.client_cert, args.client_key),
         ssl_verify=not args.ssl_no_verify,
         force_lowercase=args.lowercase,
         skip_root=args.skip_root,
