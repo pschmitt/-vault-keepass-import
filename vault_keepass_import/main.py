@@ -13,13 +13,8 @@ import os
 import re
 
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s')
 logger = logging.getLogger(__name__)
-
-# Disable logging for requests and urllib3
-logging.getLogger('requests').setLevel(logging.CRITICAL)
-logging.getLogger('urllib3').setLevel(logging.CRITICAL)
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
 def get_path(vault_backend, entry):
@@ -50,7 +45,7 @@ def reset_vault_backend(vault_url, vault_token, vault_backend,
         client.sys.disable_secrets_engine(path=vault_backend)
     except hvac.exceptions.InvalidRequest as e:
         if e.message == 'no matching mount':
-            logging.debug('Could not delete backend: Mount point not found.')
+            logging.error('Could not delete backend: Mount point not found.')
         else:
             raise
     client.sys.enable_secrets_engine(backend_type='kv', path=vault_backend)
@@ -121,7 +116,6 @@ def export_to_vault(keepass_db, keepass_password, keepass_keyfile,
         entry_path = get_path(vault_backend, e)
         if force_lowercase:
             entry_path = entry_path.lower()
-        logger.debug(f'INSERT {entry_path} {entry}')
         try:
             exists = client.secrets.kv.v2.read_secret_version(entry_path)
         except hvac.exceptions.InvalidPath:
@@ -146,6 +140,12 @@ def export_to_vault(keepass_db, keepass_password, keepass_keyfile,
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--verbose',
+        action='store_true',
+        required=False,
+        help='Verbose mode'
+    )
     parser.add_argument(
         '-p', '--password',
         required=False,
@@ -228,6 +228,12 @@ def main():
             token = args.token
     else:
         token = getpass.getpass('Vault token: ')
+
+    if args.verbose:
+        level = logging.DEBUG
+    else:
+        level = logging.INFO
+    logging.getLogger('vault_keepass_import').setLevel(level)
 
     if args.erase:
         reset_vault_backend(
