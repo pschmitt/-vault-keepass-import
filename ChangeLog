@@ -1,0 +1,41 @@
+CHANGES
+=======
+
+1.0.0
+-----
+
+* add support for client side SSL certificates
+* only export expiry\_time if expires is set
+* prefix the path with vault\_backend
+* posargs is useful for pytest, not so much for flake8
+* rework export\_to\_vault and add --idempotent
+* rework get\_next\_similar\_entry\_index and add a test
+* convert reset\_vault\_backend to KVv2
+* convert export\_entries() to pykeepass
+* implement the get\_path() helper
+* use pykeepass instead of libkeepass
+* add minimal tox & pytest based test and document it
+* fix python3 compatibility
+* flake8 fix
+* use kv v2 by default instead of kv v1
+* Invert behavior of --skip-root
+* Remove debug stuff
+* Fix -k option
+* Implement --skip-root to shorten the URLs of all entries
+* Fix: keys are always lowercased, even if not explicitely requested
+* Ignore pyinstaller files
+* Externalize entry\_name and path clean function
+* Remove leading and trailing forward slashes in both entry names and path
+* Display exact insert path in log
+* Formatting
+* Remove leading and trailing whitespace in both entry names and path
+* Don't overwrite entries if there are multiple that share the same name
+* Fix: title is not ignored
+* Add optional --keyfile arg to unlock the KeePass DB using a keyfile
+* Add --lowercase arg to force keys to be lowercased on import
+* Remove redundant 'Title' attribute
+* Add arg help messages
+* Import all fields, not just the password + Fix path for items in the root folder
+* Remove unused functions
+* GPL3
+* Import files
