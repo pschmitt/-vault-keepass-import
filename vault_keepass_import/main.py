@@ -37,10 +37,9 @@ def export_entries(filename, password, keyfile=None, skip_root=False):
     return all_entries
 
 
-def reset_vault_backend(vault_url, vault_token, vault_backend,
-                        cert=None, ssl_verify=True):
+def reset_vault_backend(vault_url, vault_token, vault_backend, cert, verify):
     client = hvac.Client(
-        url=vault_url, token=vault_token, cert=cert, verify=ssl_verify
+        url=vault_url, token=vault_token, cert=cert, verify=verify
     )
     try:
         client.sys.disable_secrets_engine(path=vault_backend)
@@ -52,8 +51,8 @@ def reset_vault_backend(vault_url, vault_token, vault_backend,
     client.sys.enable_secrets_engine(backend_type='kv', path=vault_backend)
 
 
-def get_next_similar_entry_index(vault_url, vault_token, entry_name, cert=None, ssl_verify=True):
-    client = hvac.Client(url=vault_url, token=vault_token, cert=cert, verify=ssl_verify)
+def get_next_similar_entry_index(vault_url, vault_token, entry_name, cert, verify):
+    client = hvac.Client(url=vault_url, token=vault_token, cert=cert, verify=verify)
     index = 0
     try:
         title = os.path.basename(entry_name)
@@ -69,10 +68,9 @@ def get_next_similar_entry_index(vault_url, vault_token, entry_name, cert=None, 
     return index + 1
 
 
-def generate_entry_path(vault_url, vault_token, entry_path,
-                        cert=None, ssl_verify=True):
+def generate_entry_path(vault_url, vault_token, entry_path, cert, verify):
     next_entry_index = get_next_similar_entry_index(
-        vault_url, vault_token, entry_path, cert, ssl_verify
+        vault_url, vault_token, entry_path, cert, verify
     )
     new_entry_path = '{} ({})'.format(entry_path, next_entry_index)
     logger.info(
@@ -103,14 +101,14 @@ def vault_entry_to_dict(e):
 
 
 def export_to_vault(keepass_db, keepass_password, keepass_keyfile,
-                    vault_url, vault_token, vault_backend, cert=None, ssl_verify=True,
+                    vault_url, vault_token, vault_backend, cert, verify,
                     force_lowercase=False, skip_root=False, allow_duplicates=True):
     entries = export_entries(
         keepass_db, keepass_password, keepass_keyfile,
         skip_root
     )
     client = hvac.Client(
-        url=vault_url, token=vault_token, cert=cert, verify=ssl_verify
+        url=vault_url, token=vault_token, cert=cert, verify=verify
     )
     r = {}
     for e in entries:
@@ -127,7 +125,7 @@ def export_to_vault(keepass_db, keepass_password, keepass_keyfile,
         if allow_duplicates:
             if exists:
                 entry_path = generate_entry_path(
-                    vault_url, vault_token, entry_path, cert, ssl_verify)
+                    vault_url, vault_token, entry_path, cert, verify)
             r[entry_path] = 'changed'
         else:
             if exists:
@@ -184,6 +182,12 @@ def main():
         help='Skip KeePass root folder (shorter paths)'
     )
     parser.add_argument(
+        '--ca-cert',
+        required=False,
+        help=("Path on the local disk to a single PEM-encoded CA certificate to verify "
+              "the Vault server's SSL certificate.")
+    )
+    parser.add_argument(
         '--client-cert',
         required=False,
         help='client cert file'
@@ -237,12 +241,20 @@ def main():
         level = logging.INFO
     logging.getLogger('vault_keepass_import').setLevel(level)
 
+    if args.ssl_no_verify:
+        verify = False
+    else:
+        if args.ca_cert:
+            verify = args.ca_cert
+        else:
+            verify = True
+
     if args.erase:
         reset_vault_backend(
             vault_url=args.vault,
             vault_token=token,
             cert=(args.client_cert, args.client_key),
-            ssl_verify=not args.ssl_no_verify,
+            verify=verify,
             vault_backend=args.backend
         )
     export_to_vault(
@@ -253,7 +265,7 @@ def main():
         vault_token=token,
         vault_backend=args.backend,
         cert=(args.client_cert, args.client_key),
-        ssl_verify=not args.ssl_no_verify,
+        verify=verify,
         force_lowercase=args.lowercase,
         skip_root=args.skip_root,
         allow_duplicates=not args.idempotent

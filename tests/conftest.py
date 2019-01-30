@@ -25,7 +25,7 @@ def vault_server(tmpdir):
         L                      = Test Locality
         O                      = Organization Name
         OU                     = Organizational Unit Name
-        CN                     = Common Name
+        CN                     = 127.0.0.1
         emailAddress           = test@email.address
 
         [ req_attributes ]
