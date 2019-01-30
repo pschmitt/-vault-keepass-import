@@ -91,7 +91,7 @@ def keepass_entry_to_dict(e):
         entry['expiry_time'] = e.expiry_time.timestamp()
     for k in ('ctime', 'atime', 'mtime'):
         if getattr(e, k):
-            entry[k] = getattr(e, k).timestamp()
+            entry[k] = str(getattr(e, k).timestamp())
     if hasattr(e, 'attachments'):  # implemented in pykeepass >= 3.0.3
         for a in e.attachments:
             entry[f'{a.id}/{a.filename}'] = base64.b64encode(a.data).decode('ascii')
