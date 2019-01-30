@@ -5,6 +5,7 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 import argparse
+import base64
 import getpass
 import hvac
 from pykeepass import PyKeePass
@@ -93,7 +94,7 @@ def keepass_entry_to_dict(e):
             entry[k] = getattr(e, k).timestamp()
     if hasattr(e, 'attachments'):  # implemented in pykeepass >= 3.0.3
         for a in e.attachments:
-            entry[f'{a.id}/{a.filename}'] = a.data.decode('utf-8')
+            entry[f'{a.id}/{a.filename}'] = base64.b64encode(a.data).decode('ascii')
     return entry
 
 

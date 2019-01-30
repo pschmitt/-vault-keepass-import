@@ -87,7 +87,14 @@ Data conversion
 * `mtime`, `ctime`, `atime` are always imported and converted to `epoch <https://en.wikipedia.org/wiki/Unix_time>`_
 * `expiry_time` is only imported if set and converted to `epoch <https://en.wikipedia.org/wiki/Unix_time>`_
 * `username`, `password`, `url`, `notes`, `tags`, `uuid` are imported as is
-* `attachments` are imported with a key set to **id/filename** and the value as is (for instance if there only is one **foo.txt** attachment, it will have the key **0/foo.txt**)
+* `attachments` are imported with a key set to **id/filename** (for
+  instance if there only is one *foo.txt** attachment, it will have
+  the key **0/foo.txt**) and the value is base64 encoded. For
+  instance, the actual value can be retrieved from the command line with:
+
+  .. code::
+
+     $ vault kv get -field 8/attached.txt secret/mysecret | base64 --decode
 
 Contributions
 =============
