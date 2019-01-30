@@ -78,16 +78,16 @@ def test_export_to_vault_reset(vault_server):
                   'keepass/Group1/title1group1': 'changed',
                   'keepass/Group1/Group1a/title1group1a': 'changed',
                   'keepass/withattachement': 'changed'}
-    main.reset_vault_backend(vault_url=vault_server['http'],
-                             vault_token=vault_server['token'],
-                             vault_backend='secrets',
-                             cert=(None, None),
-                             verify=False)
+    main.reset_vault_secrets_engine(url=vault_server['http'],
+                                    token=vault_server['token'],
+                                    path='secret',
+                                    cert=(None, None),
+                                    verify=False)
     r1 = run_import()
-    assert r1 == {'keepass/title1 (1)': 'changed',
-                  'keepass/Group1/title1group1 (1)': 'changed',
-                  'keepass/Group1/Group1a/title1group1a (1)': 'changed',
-                  'keepass/withattachement (1)': 'changed'}
+    assert r1 == {'keepass/title1': 'changed',
+                  'keepass/Group1/title1group1': 'changed',
+                  'keepass/Group1/Group1a/title1group1a': 'changed',
+                  'keepass/withattachement': 'changed'}
 
 
 def test_client_cert(vault_server):

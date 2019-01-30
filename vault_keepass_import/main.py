@@ -37,18 +37,18 @@ def export_entries(filename, password, keyfile=None, skip_root=False):
     return all_entries
 
 
-def reset_vault_backend(vault_url, vault_token, vault_backend, cert, verify):
+def reset_vault_secrets_engine(url, token, path, cert, verify):
     client = hvac.Client(
-        url=vault_url, token=vault_token, cert=cert, verify=verify
+        url=url, token=token, cert=cert, verify=verify
     )
     try:
-        client.sys.disable_secrets_engine(path=vault_backend)
+        client.sys.disable_secrets_engine(path=path)
     except hvac.exceptions.InvalidRequest as e:
         if e.message == 'no matching mount':
             logging.error('Could not delete backend: Mount point not found.')
         else:
             raise
-    client.sys.enable_secrets_engine(backend_type='kv', path=vault_backend)
+    client.sys.enable_secrets_engine(backend_type='kv', options={'version': '2'}, path=path)
 
 
 def get_next_similar_entry_index(vault_url, vault_token, entry_name, cert, verify):
@@ -86,7 +86,7 @@ def keepass_entry_to_dict(e):
         if getattr(e, k):
             entry[k] = getattr(e, k)
     if e.expires:
-        entry['expiry_time'] = e.expiry_time.timestamp()
+        entry['expiry_time'] = str(e.expiry_time.timestamp())
     for k in ('ctime', 'atime', 'mtime'):
         if getattr(e, k):
             entry[k] = str(getattr(e, k).timestamp())
@@ -209,6 +209,11 @@ def main():
         help='Vault backend (destination of the import)'
     )
     parser.add_argument(
+        '--path',
+        default='secret',
+        help='KV mount point',
+    )
+    parser.add_argument(
         '-e', '--erase',
         action='store_true',
         help='Erase the prefix prior to the import operation'
@@ -250,12 +255,12 @@ def main():
             verify = True
 
     if args.erase:
-        reset_vault_backend(
-            vault_url=args.vault,
-            vault_token=token,
+        reset_vault_secrets_engine(
+            url=args.vault,
+            token=token,
+            path=args.path,
             cert=(args.client_cert, args.client_key),
             verify=verify,
-            vault_backend=args.backend
         )
     export_to_vault(
         keepass_db=args.KDBX,
