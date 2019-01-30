@@ -1,6 +1,12 @@
 CHANGES
 =======
 
+1.0.5
+-----
+
+* version 1.0.5
+* attachments must be base64 encoded
+
 1.0.4
 -----
 
