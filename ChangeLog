@@ -1,6 +1,12 @@
 CHANGES
 =======
 
+1.0.6
+-----
+
+* version 1.0.6
+* convert ctime/atime/mtime to strings
+
 1.0.5
 -----
 
