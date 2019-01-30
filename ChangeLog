@@ -1,6 +1,16 @@
 CHANGES
 =======
 
+1.0.4
+-----
+
+* version 1.0.4
+* backward compatibility with pykeepass 3.0.2: no attachment
+* reduce verbosity and add the --verbose option
+* move the wait loop for the vault server in the fixture
+* workaround unexpected behavior for PyKeePass context manager
+* create the vault\_server fixture
+
 1.0.3
 -----
 
