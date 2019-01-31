@@ -22,10 +22,19 @@ class Importer(object):
 
     def __init__(self,
                  keepass_db, keepass_password, keepass_keyfile,
-                 vault_url, vault_token, vault_backend, cert, verify):
-        self.keepass = PyKeePass(keepass_db, password=keepass_password, keyfile=keepass_keyfile)
-        self.vault = hvac.Client(url=vault_url, token=vault_token, cert=cert, verify=verify)
+                 vault_url, vault_token, vault_backend, cert, verify,
+                 path='secret'):
+        self.path = path
         self.vault_backend = vault_backend
+        self.keepass = PyKeePass(keepass_db, password=keepass_password, keyfile=keepass_keyfile)
+        self.open_vault(vault_url, vault_token, cert, verify)
+
+    def open_vault(self, vault_url, vault_token, cert, verify):
+        self.vault = hvac.Client(url=vault_url, token=vault_token, cert=cert, verify=verify)
+        mounts = self.vault.list_secret_backends()['data']
+        path = self.path + '/'
+        assert path in mounts, f'path {path} is not founds in mounts {mounts}'
+        self.vault_kv_version = mounts[path]['options']['version']
 
     @staticmethod
     def get_path(vault_backend, entry):
@@ -61,7 +70,11 @@ class Importer(object):
         index = 0
         try:
             title = os.path.basename(entry_name)
-            children = client.secrets.kv.v2.list_secrets(os.path.dirname(entry_name))
+            d = os.path.dirname(entry_name)
+            if self.vault_kv_version == '2':
+                children = client.secrets.kv.v2.list_secrets(d)
+            else:
+                children = client.secrets.kv.v1.list_secrets(d)
             for child in children['data']['keys']:
                 m = re.match(title + r' \((\d+)\)$', child)
                 if m:
@@ -119,7 +132,10 @@ class Importer(object):
             if force_lowercase:
                 entry_path = entry_path.lower()
             try:
-                exists = client.secrets.kv.v2.read_secret_version(entry_path)
+                if self.vault_kv_version == '2':
+                    exists = client.secrets.kv.v2.read_secret_version(entry_path)
+                else:
+                    exists = client.secrets.kv.v1.read_secret(entry_path)
             except hvac.exceptions.InvalidPath:
                 exists = None
             except Exception:
@@ -135,7 +151,10 @@ class Importer(object):
                     r[entry_path] = 'changed'
             logger.info(f'{r[entry_path]}: {entry_path} => {entry}')
             if r[entry_path] == 'changed':
-                client.secrets.kv.v2.create_or_update_secret(entry_path, entry)
+                if self.vault_kv_version == '2':
+                    client.secrets.kv.v2.create_or_update_secret(entry_path, entry)
+                else:
+                    client.secrets.kv.v1.create_or_update_secret(entry_path, entry)
         return r
 
 
@@ -264,6 +283,7 @@ def main():
         vault_backend=args.backend,
         cert=(args.client_cert, args.client_key),
         verify=verify,
+        path=args.path,
     )
     if args.erase:
         importer.reset_vault_secrets_engine(
