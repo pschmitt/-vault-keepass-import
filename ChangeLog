@@ -1,6 +1,15 @@
 CHANGES
 =======
 
+1.0.8
+-----
+
+* version 1.0.8
+* add support for KV v1
+* move repeated arguments to \_\_init\_\_ to keep the Importer DRY
+* minimal refactor to convert functions into class methods
+* move the mapping of imported fields to the beginning
+
 1.0.7
 -----
 
