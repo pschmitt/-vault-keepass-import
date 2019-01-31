@@ -18,18 +18,26 @@ logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s')
 logger = logging.getLogger(__name__)
 
 
-class Import(object):
+class Importer(object):
 
-    def get_path(self, vault_backend, entry):
+    def __init__(self,
+                 keepass_db, keepass_password, keepass_keyfile,
+                 vault_url, vault_token, vault_backend, cert, verify):
+        self.keepass = PyKeePass(keepass_db, password=keepass_password, keyfile=keepass_keyfile)
+        self.vault = hvac.Client(url=vault_url, token=vault_token, cert=cert, verify=verify)
+        self.vault_backend = vault_backend
+
+    @staticmethod
+    def get_path(vault_backend, entry):
         path = entry.parentgroup.path
         if path[0] == '/':
             return vault_backend + '/' + entry.title
         else:
             return vault_backend + '/' + path + '/' + entry.title
 
-    def export_entries(self, filename, password, keyfile=None, skip_root=False):
+    def export_entries(self, skip_root=False):
         all_entries = []
-        kp = PyKeePass(filename, password=password, keyfile=keyfile)
+        kp = self.keepass
         for entry in kp.entries:
             if skip_root and entry.parentgroup.path == '/':
                 continue
@@ -37,10 +45,8 @@ class Import(object):
         logger.info('Total entries: {}'.format(len(all_entries)))
         return all_entries
 
-    def reset_vault_secrets_engine(self, url, token, path, cert, verify):
-        client = hvac.Client(
-            url=url, token=token, cert=cert, verify=verify
-        )
+    def reset_vault_secrets_engine(self, path):
+        client = self.vault
         try:
             client.sys.disable_secrets_engine(path=path)
         except hvac.exceptions.InvalidRequest as e:
@@ -50,8 +56,8 @@ class Import(object):
                 raise
         client.sys.enable_secrets_engine(backend_type='kv', options={'version': '2'}, path=path)
 
-    def get_next_similar_entry_index(self, vault_url, vault_token, entry_name, cert, verify):
-        client = hvac.Client(url=vault_url, token=vault_token, cert=cert, verify=verify)
+    def get_next_similar_entry_index(self, entry_name):
+        client = self.vault
         index = 0
         try:
             title = os.path.basename(entry_name)
@@ -66,10 +72,8 @@ class Import(object):
             raise
         return index + 1
 
-    def generate_entry_path(self, vault_url, vault_token, entry_path, cert, verify):
-        next_entry_index = self.get_next_similar_entry_index(
-            vault_url, vault_token, entry_path, cert, verify
-        )
+    def generate_entry_path(self, entry_path):
+        next_entry_index = self.get_next_similar_entry_index(entry_path)
         new_entry_path = '{} ({})'.format(entry_path, next_entry_index)
         logger.info(
             'Entry "{}" already exists, '
@@ -77,7 +81,8 @@ class Import(object):
         )
         return new_entry_path
 
-    def keepass_entry_to_dict(self, e):
+    @staticmethod
+    def keepass_entry_to_dict(e):
         entry = {}
         for k in ('username', 'password', 'url', 'notes', 'tags', 'icon', 'uuid'):
             if getattr(e, k):
@@ -97,23 +102,20 @@ class Import(object):
                 entry[f'{a.id}/{a.filename}'] = base64.b64encode(a.data).decode('ascii')
         return entry
 
-    def vault_entry_to_dict(self, e):
+    @staticmethod
+    def vault_entry_to_dict(e):
         return e['data']['data']
 
-    def export_to_vault(self, keepass_db, keepass_password, keepass_keyfile,
-                        vault_url, vault_token, vault_backend, cert, verify,
-                        force_lowercase=False, skip_root=False, allow_duplicates=True):
-        entries = self.export_entries(
-            keepass_db, keepass_password, keepass_keyfile,
-            skip_root
-        )
-        client = hvac.Client(
-            url=vault_url, token=vault_token, cert=cert, verify=verify
-        )
+    def export_to_vault(self,
+                        force_lowercase=False,
+                        skip_root=False,
+                        allow_duplicates=True):
+        entries = self.export_entries(skip_root)
+        client = self.vault
         r = {}
         for e in entries:
             entry = self.keepass_entry_to_dict(e)
-            entry_path = self.get_path(vault_backend, e)
+            entry_path = self.get_path(self.vault_backend, e)
             if force_lowercase:
                 entry_path = entry_path.lower()
             try:
@@ -124,8 +126,7 @@ class Import(object):
                 raise
             if allow_duplicates:
                 if exists:
-                    entry_path = self.generate_entry_path(
-                        vault_url, vault_token, entry_path, cert, verify)
+                    entry_path = self.generate_entry_path(entry_path)
                 r[entry_path] = 'changed'
             else:
                 if exists:
@@ -254,15 +255,7 @@ def main():
         else:
             verify = True
 
-    if args.erase:
-        Import().reset_vault_secrets_engine(
-            url=args.vault,
-            token=token,
-            path=args.path,
-            cert=(args.client_cert, args.client_key),
-            verify=verify,
-        )
-    Import().export_to_vault(
+    importer = Importer(
         keepass_db=args.KDBX,
         keepass_password=password,
         keepass_keyfile=args.keyfile,
@@ -271,6 +264,12 @@ def main():
         vault_backend=args.backend,
         cert=(args.client_cert, args.client_key),
         verify=verify,
+    )
+    if args.erase:
+        importer.reset_vault_secrets_engine(
+            path=args.path,
+        )
+    importer.export_to_vault(
         force_lowercase=args.lowercase,
         skip_root=args.skip_root,
         allow_duplicates=not args.idempotent
