@@ -1,6 +1,14 @@
 CHANGES
 =======
 
+1.0.7
+-----
+
+* version 1.0.7
+* import String Fields from the Advanced tab
+* --erase must remount KV in v2
+* add support for --ca-cert
+
 1.0.6
 -----
 
