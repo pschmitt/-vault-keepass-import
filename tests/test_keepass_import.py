@@ -7,7 +7,7 @@ import base64
 
 def test_export_to_vault_duplicates(vault_server):
     def run_import():
-        return main.export_to_vault(
+        return main.Import().export_to_vault(
             keepass_db='tests/test_db.kdbx',
             keepass_password='master1',
             keepass_keyfile=None,
@@ -37,7 +37,7 @@ def test_export_to_vault_duplicates(vault_server):
 
 def test_export_to_vault_imports_expected_fields(vault_server):
     def run_import():
-        return main.export_to_vault(
+        return main.Import().export_to_vault(
             keepass_db='tests/test_db.kdbx',
             keepass_password='master1',
             keepass_keyfile=None,
@@ -64,11 +64,11 @@ def test_export_to_vault_imports_expected_fields(vault_server):
     assert withattachement['url'] == 'url2'
     assert withattachement['username'] == 'user2'
     assert 'Notes' not in withattachement
-    
+
 
 def test_export_to_vault_no_duplicates(vault_server):
     def run_import():
-        return main.export_to_vault(
+        return main.Import().export_to_vault(
             keepass_db='tests/test_db.kdbx',
             keepass_password='master1',
             keepass_keyfile=None,
@@ -95,7 +95,7 @@ def test_export_to_vault_no_duplicates(vault_server):
 
 def test_export_to_vault_reset(vault_server):
     def run_import():
-        return main.export_to_vault(
+        return main.Import().export_to_vault(
             keepass_db='tests/test_db.kdbx',
             keepass_password='master1',
             keepass_keyfile=None,
@@ -111,11 +111,11 @@ def test_export_to_vault_reset(vault_server):
                   'keepass/Group1/title1group1': 'changed',
                   'keepass/Group1/Group1a/title1group1a': 'changed',
                   'keepass/withattachement': 'changed'}
-    main.reset_vault_secrets_engine(url=vault_server['http'],
-                                    token=vault_server['token'],
-                                    path='secret',
-                                    cert=(None, None),
-                                    verify=False)
+    main.Import().reset_vault_secrets_engine(url=vault_server['http'],
+                                             token=vault_server['token'],
+                                             path='secret',
+                                             cert=(None, None),
+                                             verify=False)
     r1 = run_import()
     assert r1 == {'keepass/title1': 'changed',
                   'keepass/Group1/title1group1': 'changed',
@@ -135,7 +135,7 @@ def test_client_cert(vault_server):
     )
 
     # SUCCESS with CA and client certificate provided
-    r0 = main.export_to_vault(
+    r0 = main.Import().export_to_vault(
             verify=vault_server['crt'],
             cert=(vault_server['crt'], vault_server['key']),
             **kwargs,
@@ -146,7 +146,7 @@ def test_client_cert(vault_server):
                   'keepass/withattachement': 'changed'}
 
     # SUCCESS with CA missing but verify False  and client certificate provided
-    r0 = main.export_to_vault(
+    r0 = main.Import().export_to_vault(
             verify=False,
             cert=(vault_server['crt'], vault_server['key']),
             **kwargs,
@@ -158,7 +158,7 @@ def test_client_cert(vault_server):
 
     # FAILURE with missing client certificate
     with pytest.raises(requests.exceptions.SSLError):
-        main.export_to_vault(
+        main.Import().export_to_vault(
             verify=False,
             cert=(None, None),
             **kwargs,
@@ -166,7 +166,7 @@ def test_client_cert(vault_server):
 
     # FAILURE with missing CA
     with pytest.raises(requests.exceptions.SSLError):
-        main.export_to_vault(
+        main.Import().export_to_vault(
             verify=True,
             cert=(vault_server['crt'], vault_server['key']),
             **kwargs,
