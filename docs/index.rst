@@ -11,6 +11,28 @@ Vault <https://learn.hashicorp.com/vault/getting-started/install>`_
 Bugs and feature requests can be found `in the issue tracker
 <https://lab.enough.community/singuliere/vault-keepass-import/issues>`_
 
+The `Title` of the entry is used as the last component of the secret path. For instance if importing an entry with `Title` `mysecret` in the `mygroup` group, the path `secret/keepass/mygroup/mysecret` will be used.
+
+* `User name` from the `Entry` tab is imported as is under the key `username`
+* `Password` from the `Entry` tab is imported as is under the key `password`
+* `URL` from the `Entry` tab is imported as is under the key `password`
+* `Notes` from the `Entry` tab is imported as is under the key `notes`
+* `Expires` from the `Entry` tab is imported under the key `expiry_time`. It is only imported if set and converted to `epoch <https://en.wikipedia.org/wiki/Unix_time>`_.
+* `Tags` from the `Properties` tab is imported as is under the key `tags`
+* `UUID` from the `Properties` tab is imported as is under the key `uuid`
+* `String fields` from the `Advanced` tab are imported as is with a key
+  matching their `Name` and a value set to their `Value`
+* `File attachments` from the `Advanced` tab are imported with a key
+  set to **id/filename** (for instance if there only is one
+  **foo.txt** attachment, it will have the key **0/foo.txt**) and the
+  value is base64 encoded. For instance, the actual value can be
+  retrieved from the command line with:
+
+  .. code::
+
+     $ vault kv get -field 8/attached.txt secret/mysecret | base64 --decode
+* `mtime`, `ctime`, `atime` are always imported and converted to `epoch <https://en.wikipedia.org/wiki/Unix_time>`_
+
 Quick start
 ~~~~~~~~~~~
 
@@ -77,34 +99,6 @@ Command help
 .. code::
 
    vault-keepass-import --help
-
-Reference
-=========
-
-Data conversion
-~~~~~~~~~~~~~~~
-
-The `Title` of the entry is used as the last component of the secret path. For instance if importing an entry with `Title` `mysecret` in the `mygroup` group, the path `secret/keepass/mygroup/mysecret` will be used.
-
-* `User name` from the `Entry` tab is imported as is under the key `username`
-* `Password` from the `Entry` tab is imported as is under the key `password`
-* `URL` from the `Entry` tab is imported as is under the key `password`
-* `Notes` from the `Entry` tab is imported as is under the key `notes`
-* `Expires` from the `Entry` tab is imported under the key `expiry_time`. It is only imported if set and converted to `epoch <https://en.wikipedia.org/wiki/Unix_time>`_.
-* `Tags` from the `Properties` tab is imported as is under the key `tags`
-* `UUID` from the `Properties` tab is imported as is under the key `uuid`
-* `String fields` from the `Advanced` tab are imported as is with a key
-  matching their `Name` and a value set to their `Value`
-* `File attachments` from the `Advanced` tab are imported with a key
-  set to **id/filename** (for instance if there only is one
-  **foo.txt** attachment, it will have the key **0/foo.txt**) and the
-  value is base64 encoded. For instance, the actual value can be
-  retrieved from the command line with:
-
-  .. code::
-
-     $ vault kv get -field 8/attached.txt secret/mysecret | base64 --decode
-* `mtime`, `ctime`, `atime` are always imported and converted to `epoch <https://en.wikipedia.org/wiki/Unix_time>`_
 
 Contributions
 =============
