@@ -1,6 +1,8 @@
 from vault_keepass_import import main
+import hvac
 import pytest
 import requests
+import base64
 
 
 def test_export_to_vault_duplicates(vault_server):
@@ -32,6 +34,37 @@ def test_export_to_vault_duplicates(vault_server):
                   'keepass/Group1/Group1a/title1group1a (2)': 'changed',
                   'keepass/withattachement (2)': 'changed'}
 
+
+def test_export_to_vault_imports_expected_fields(vault_server):
+    def run_import():
+        return main.export_to_vault(
+            keepass_db='tests/test_db.kdbx',
+            keepass_password='master1',
+            keepass_keyfile=None,
+            vault_url=vault_server['http'],
+            vault_backend='keepass',
+            vault_token=vault_server['token'],
+            cert=(None, None),
+            verify=False,
+            allow_duplicates=False)
+
+    r1 = run_import()
+    assert r1 == {'keepass/title1': 'changed',
+                  'keepass/Group1/title1group1': 'changed',
+                  'keepass/Group1/Group1a/title1group1a': 'changed',
+                  'keepass/withattachement': 'changed'}
+    client = hvac.Client(url=vault_server['http'], token=vault_server['token'])
+    withattachement = client.secrets.kv.v2.read_secret_version(
+        'keepass/withattachement')['data']['data']
+    assert withattachement['0/attached.txt'] == base64.b64encode(
+        "CONTENT\n".encode('ascii')).decode('ascii')
+    assert withattachement['custom_property1'] == 'custom_value1'
+    assert withattachement['notes'] == 'note2'
+    assert withattachement['password'] == 'password2'
+    assert withattachement['url'] == 'url2'
+    assert withattachement['username'] == 'user2'
+    assert 'Notes' not in withattachement
+    
 
 def test_export_to_vault_no_duplicates(vault_server):
     def run_import():
@@ -91,7 +124,7 @@ def test_export_to_vault_reset(vault_server):
 
 
 def test_client_cert(vault_server):
-    kwargs =  dict(
+    kwargs = dict(
         keepass_db='tests/test_db.kdbx',
         keepass_password='master1',
         keepass_keyfile=None,

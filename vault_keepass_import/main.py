@@ -85,6 +85,11 @@ def keepass_entry_to_dict(e):
     for k in ('username', 'password', 'url', 'notes', 'tags', 'icon', 'uuid'):
         if getattr(e, k):
             entry[k] = getattr(e, k)
+    custom_properties = e.custom_properties
+    # remove this workaround when https://github.com/pschmitt/pykeepass/pull/138 is merged
+    if 'Notes' in custom_properties:
+        del custom_properties['Notes']
+    entry.update(custom_properties)
     if e.expires:
         entry['expiry_time'] = str(e.expiry_time.timestamp())
     for k in ('ctime', 'atime', 'mtime'):
