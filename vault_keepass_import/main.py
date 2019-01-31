@@ -54,17 +54,6 @@ class Importer(object):
         logger.info('Total entries: {}'.format(len(all_entries)))
         return all_entries
 
-    def reset_vault_secrets_engine(self, path):
-        client = self.vault
-        try:
-            client.sys.disable_secrets_engine(path=path)
-        except hvac.exceptions.InvalidRequest as e:
-            if e.message == 'no matching mount':
-                logging.error('Could not delete backend: Mount point not found.')
-            else:
-                raise
-        client.sys.enable_secrets_engine(backend_type='kv', options={'version': '2'}, path=path)
-
     def get_next_similar_entry_index(self, entry_name):
         client = self.vault
         index = 0
@@ -234,11 +223,6 @@ def main():
         help='KV mount point',
     )
     parser.add_argument(
-        '-e', '--erase',
-        action='store_true',
-        help='Erase the prefix prior to the import operation'
-    )
-    parser.add_argument(
         '-l', '--lowercase',
         action='store_true',
         help='Force keys to be lowercased'
@@ -285,10 +269,6 @@ def main():
         verify=verify,
         path=args.path,
     )
-    if args.erase:
-        importer.reset_vault_secrets_engine(
-            path=args.path,
-        )
     importer.export_to_vault(
         force_lowercase=args.lowercase,
         skip_root=args.skip_root,
