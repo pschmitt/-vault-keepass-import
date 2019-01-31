@@ -17,20 +17,20 @@ def test_export_to_vault_duplicates(vault_server):
         verify=False)
 
     r0 = importer.export_to_vault()
-    assert r0 == {'keepass/title1': 'changed',
-                  'keepass/Group1/title1group1': 'changed',
-                  'keepass/Group1/Group1a/title1group1a': 'changed',
-                  'keepass/withattachment': 'changed'}
+    assert r0 == {'keepass/title1': 'new',
+                  'keepass/Group1/title1group1': 'new',
+                  'keepass/Group1/Group1a/title1group1a': 'new',
+                  'keepass/withattachment': 'new'}
     r1 = importer.export_to_vault()
-    assert r1 == {'keepass/title1 (1)': 'changed',
-                  'keepass/Group1/title1group1 (1)': 'changed',
-                  'keepass/Group1/Group1a/title1group1a (1)': 'changed',
-                  'keepass/withattachment (1)': 'changed'}
+    assert r1 == {'keepass/title1 (1)': 'new',
+                  'keepass/Group1/title1group1 (1)': 'new',
+                  'keepass/Group1/Group1a/title1group1a (1)': 'new',
+                  'keepass/withattachment (1)': 'new'}
     r2 = importer.export_to_vault()
-    assert r2 == {'keepass/title1 (2)': 'changed',
-                  'keepass/Group1/title1group1 (2)': 'changed',
-                  'keepass/Group1/Group1a/title1group1a (2)': 'changed',
-                  'keepass/withattachment (2)': 'changed'}
+    assert r2 == {'keepass/title1 (2)': 'new',
+                  'keepass/Group1/title1group1 (2)': 'new',
+                  'keepass/Group1/Group1a/title1group1a (2)': 'new',
+                  'keepass/withattachment (2)': 'new'}
 
 
 def verify_withattachment(vault_server, kv_version):
@@ -63,10 +63,10 @@ def test_export_to_vault_imports_expected_fields(vault_server):
         verify=False)
 
     r1 = importer.export_to_vault()
-    assert r1 == {'keepass/title1': 'changed',
-                  'keepass/Group1/title1group1': 'changed',
-                  'keepass/Group1/Group1a/title1group1a': 'changed',
-                  'keepass/withattachment': 'changed'}
+    assert r1 == {'keepass/title1': 'new',
+                  'keepass/Group1/title1group1': 'new',
+                  'keepass/Group1/Group1a/title1group1a': 'new',
+                  'keepass/withattachment': 'new'}
     verify_withattachment(vault_server, '2')
 
 
@@ -82,10 +82,10 @@ def test_export_to_vault_no_duplicates(vault_server):
         verify=False)
 
     r0 = importer.export_to_vault()
-    assert r0 == {'keepass/title1': 'changed',
-                  'keepass/Group1/title1group1': 'changed',
-                  'keepass/Group1/Group1a/title1group1a': 'changed',
-                  'keepass/withattachment': 'changed'}
+    assert r0 == {'keepass/title1': 'new',
+                  'keepass/Group1/title1group1': 'new',
+                  'keepass/Group1/Group1a/title1group1a': 'new',
+                  'keepass/withattachment': 'new'}
     r1 = importer.export_to_vault(allow_duplicates=False)
     # converged
     r2 = importer.export_to_vault(allow_duplicates=False)
@@ -112,10 +112,10 @@ def test_client_cert(vault_server):
             cert=(vault_server['crt'], vault_server['key']),
             **kwargs,
         ).export_to_vault(allow_duplicates=False)
-    assert r0 == {'keepass/title1': 'changed',
-                  'keepass/Group1/title1group1': 'changed',
-                  'keepass/Group1/Group1a/title1group1a': 'changed',
-                  'keepass/withattachment': 'changed'}
+    assert r0 == {'keepass/title1': 'new',
+                  'keepass/Group1/title1group1': 'new',
+                  'keepass/Group1/Group1a/title1group1a': 'new',
+                  'keepass/withattachment': 'new'}
 
     # SUCCESS with CA missing but verify False  and client certificate provided
     r0 = main.Importer(

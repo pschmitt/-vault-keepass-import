@@ -132,14 +132,14 @@ class Importer(object):
             if allow_duplicates:
                 if exists:
                     entry_path = self.generate_entry_path(entry_path)
-                r[entry_path] = 'changed'
+                r[entry_path] = 'new'
             else:
                 if exists:
                     r[entry_path] = entry == self.vault_entry_to_dict(exists) and 'ok' or 'changed'
                 else:
-                    r[entry_path] = 'changed'
+                    r[entry_path] = 'new'
             logger.info(f'{r[entry_path]}: {entry_path} => {entry}')
-            if r[entry_path] == 'changed':
+            if r[entry_path] in ('changed', 'new'):
                 if self.vault_kv_version == '2':
                     client.secrets.kv.v2.create_or_update_secret(entry_path, entry)
                 else:
