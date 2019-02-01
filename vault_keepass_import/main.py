@@ -46,6 +46,14 @@ class Importer(object):
             self.vault_kv_version = mounts[self.path]['options']['version']
 
     @staticmethod
+    def set_verbosity(verbose):
+        if verbose:
+            level = logging.DEBUG
+        else:
+            level = logging.INFO
+        logging.getLogger('vault_keepass_import').setLevel(level)
+
+    @staticmethod
     def get_path(prefix, entry):
         path = entry.parentgroup.path
         if path[0] == '/':
@@ -281,12 +289,6 @@ def main():
             token = args.token
     else:
         token = getpass.getpass('Vault token: ')
-
-    if args.verbose:
-        level = logging.DEBUG
-    else:
-        level = logging.INFO
-    logging.getLogger('vault_keepass_import').setLevel(level)
 
     if args.ssl_no_verify:
         verify = False
