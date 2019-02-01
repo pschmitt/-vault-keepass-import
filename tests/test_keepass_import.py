@@ -120,6 +120,29 @@ def test_export_to_vault_no_duplicates(vault_server):
     assert r2 == r3
 
 
+def test_erase(vault_server):
+    prefix = 'keepass/'
+    importer = main.Importer(
+        keepass_db='tests/test_db.kdbx',
+        keepass_password='master1',
+        keepass_keyfile=None,
+        vault_url=vault_server['http'],
+        vault_prefix=prefix,
+        vault_token=vault_server['token'],
+        cert=(None, None),
+        verify=False)
+    importer.set_verbosity(True)
+
+    client = hvac.Client(url=vault_server['http'], token=vault_server['token'])
+    importer.export_to_vault()
+    keys = client.secrets.kv.v2.list_secrets(prefix)['data']['keys']
+    assert 'Group1/' in keys
+    assert 'withattachment' in keys
+    importer.erase(importer.prefix)
+    with pytest.raises(hvac.exceptions.InvalidPath):
+        client.secrets.kv.v2.list_secrets(prefix)
+
+
 def test_client_cert(vault_server):
     kwargs = dict(
         keepass_db='tests/test_db.kdbx',

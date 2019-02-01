@@ -71,6 +71,34 @@ class Importer(object):
         logger.info('Total entries: {}'.format(len(all_entries)))
         return all_entries
 
+    def erase(self, prefix):
+        try:
+            if self.vault_kv_version == '2':
+                self.vault.secrets.kv.v2.list_secrets(prefix)
+            else:
+                self.vault.secrets.kv.v1.list_secrets(prefix)
+        except hvac.exceptions.InvalidPath:
+            return
+        self._erase(prefix)
+
+    def _erase(self, prefix):
+        if self.vault_kv_version == '2':
+            keys = self.vault.secrets.kv.v2.list_secrets(prefix)['data']['keys']
+        else:
+            keys = self.vault.secrets.kv.v1.list_secrets(prefix)['keys']
+        for key in keys:
+            path = prefix + key
+            if path.endswith('/'):
+                self._erase(path)
+            else:
+                logger.debug(f'erase {path}')
+                if self.vault_kv_version == '2':
+                    if not self.dry_run:
+                        self.vault.secrets.kv.v2.delete_metadata_and_all_versions(path)
+                else:
+                    if not self.dry_run:
+                        self.vault.secrets.kv.v1.delete_secret(path)
+
     def get_next_similar_entry_index(self, entry_name):
         client = self.vault
         index = 0
@@ -267,6 +295,11 @@ def main():
         '--path',
         default='secret/',
         help='KV mount point',
+    )
+    parser.add_argument(
+        '-e', '--erase',
+        action='store_true',
+        help='Erase the prefix prior to the import operation'
     )
     parser.add_argument(
         '-l', '--lowercase',
