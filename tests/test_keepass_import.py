@@ -5,34 +5,6 @@ import requests
 import base64
 
 
-def test_export_to_vault_duplicates(vault_server):
-    importer = main.Importer(
-        keepass_db='tests/test_db.kdbx',
-        keepass_password='master1',
-        keepass_keyfile=None,
-        vault_url=vault_server['http'],
-        vault_prefix='keepass/',
-        vault_token=vault_server['token'],
-        cert=(None, None),
-        verify=False)
-
-    r0 = importer.export_to_vault()
-    assert r0 == {'keepass/title1': 'new',
-                  'keepass/Group1/title1group1': 'new',
-                  'keepass/Group1/Group1a/title1group1a': 'new',
-                  'keepass/withattachment': 'new'}
-    r1 = importer.export_to_vault()
-    assert r1 == {'keepass/title1 (1)': 'new',
-                  'keepass/Group1/title1group1 (1)': 'new',
-                  'keepass/Group1/Group1a/title1group1a (1)': 'new',
-                  'keepass/withattachment (1)': 'new'}
-    r2 = importer.export_to_vault()
-    assert r2 == {'keepass/title1 (2)': 'new',
-                  'keepass/Group1/title1group1 (2)': 'new',
-                  'keepass/Group1/Group1a/title1group1a (2)': 'new',
-                  'keepass/withattachment (2)': 'new'}
-
-
 def verify_withattachment(vault_server, kv_version):
     client = hvac.Client(url=vault_server['http'], token=vault_server['token'])
     if kv_version == '2':
@@ -94,7 +66,7 @@ def test_export_to_vault_dry_run(vault_server):
                   'keepass/withattachment': 'new'}
 
 
-def test_export_to_vault_no_duplicates(vault_server):
+def test_export_to_vault(vault_server):
     importer = main.Importer(
         keepass_db='tests/test_db.kdbx',
         keepass_password='master1',
@@ -110,13 +82,13 @@ def test_export_to_vault_no_duplicates(vault_server):
                   'keepass/Group1/title1group1': 'new',
                   'keepass/Group1/Group1a/title1group1a': 'new',
                   'keepass/withattachment': 'new'}
-    r1 = importer.export_to_vault(allow_duplicates=False)
+    r1 = importer.export_to_vault()
     # converged
-    r2 = importer.export_to_vault(allow_duplicates=False)
+    r2 = importer.export_to_vault()
     assert all(map(lambda x: x == 'ok', r2.values()))
     assert r1.keys() == r2.keys()
     # idempotent
-    r3 = importer.export_to_vault(allow_duplicates=False)
+    r3 = importer.export_to_vault()
     assert r2 == r3
 
 
@@ -158,7 +130,7 @@ def test_client_cert(vault_server):
             verify=vault_server['crt'],
             cert=(vault_server['crt'], vault_server['key']),
             **kwargs,
-        ).export_to_vault(allow_duplicates=False)
+        ).export_to_vault()
     assert r0 == {'keepass/title1': 'new',
                   'keepass/Group1/title1group1': 'new',
                   'keepass/Group1/Group1a/title1group1a': 'new',
@@ -169,7 +141,7 @@ def test_client_cert(vault_server):
             verify=False,
             cert=(vault_server['crt'], vault_server['key']),
             **kwargs,
-        ).export_to_vault(allow_duplicates=False)
+        ).export_to_vault()
     assert r0 == {'keepass/title1': 'ok',
                   'keepass/Group1/title1group1': 'ok',
                   'keepass/Group1/Group1a/title1group1a': 'ok',
@@ -181,7 +153,7 @@ def test_client_cert(vault_server):
             verify=False,
             cert=(None, None),
             **kwargs,
-        ).export_to_vault(allow_duplicates=False)
+        ).export_to_vault()
 
     # FAILURE with missing CA
     with pytest.raises(requests.exceptions.SSLError):
@@ -189,7 +161,7 @@ def test_client_cert(vault_server):
             verify=True,
             cert=(vault_server['crt'], vault_server['key']),
             **kwargs,
-        ).export_to_vault(allow_duplicates=False)
+        ).export_to_vault()
 
 
 def switch_to_kv_v1(vault_server):

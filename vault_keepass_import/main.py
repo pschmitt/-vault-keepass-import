@@ -172,8 +172,7 @@ class Importer(object):
 
     def export_to_vault(self,
                         force_lowercase=False,
-                        skip_root=False,
-                        allow_duplicates=True):
+                        skip_root=False):
         entries = self.export_entries(skip_root)
         client = self.vault
         r = {}
@@ -191,15 +190,10 @@ class Importer(object):
                 exists = {}
             except Exception:
                 raise
-            if allow_duplicates:
-                if exists:
-                    entry_path = self.generate_entry_path(entry_path)
-                r[entry_path] = 'new'
+            if exists:
+                r[entry_path] = entry == exists and 'ok' or 'changed'
             else:
-                if exists:
-                    r[entry_path] = entry == exists and 'ok' or 'changed'
-                else:
-                    r[entry_path] = 'new'
+                r[entry_path] = 'new'
             logger.info(self.export_info(r[entry_path], entry_path, exists, entry))
             if not self.dry_run and r[entry_path] in ('changed', 'new'):
                 if self.vault_kv_version == '2':
@@ -281,12 +275,6 @@ def main():
         help='client key file'
     )
     parser.add_argument(
-        '--idempotent',
-        action='store_true',
-        required=False,
-        help='An entry is overriden if it already exists, unless it is up to date'
-    )
-    parser.add_argument(
         '--prefix',
         default='keepass/',
         help='Vault prefix (destination of the import)'
@@ -350,5 +338,4 @@ def main():
     importer.export_to_vault(
         force_lowercase=args.lowercase,
         skip_root=args.skip_root,
-        allow_duplicates=not args.idempotent,
     )
