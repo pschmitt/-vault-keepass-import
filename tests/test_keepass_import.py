@@ -11,7 +11,7 @@ def test_export_to_vault_duplicates(vault_server):
         keepass_password='master1',
         keepass_keyfile=None,
         vault_url=vault_server['http'],
-        vault_backend='keepass',
+        vault_prefix='keepass/',
         vault_token=vault_server['token'],
         cert=(None, None),
         verify=False)
@@ -57,7 +57,7 @@ def test_export_to_vault_imports_expected_fields(vault_server):
         keepass_password='master1',
         keepass_keyfile=None,
         vault_url=vault_server['http'],
-        vault_backend='keepass',
+        vault_prefix='keepass/',
         vault_token=vault_server['token'],
         cert=(None, None),
         verify=False)
@@ -76,7 +76,7 @@ def test_export_to_vault_dry_run(vault_server):
         keepass_password='master1',
         keepass_keyfile=None,
         vault_url=vault_server['http'],
-        vault_backend='keepass',
+        vault_prefix='keepass/',
         vault_token=vault_server['token'],
         cert=(None, None),
         verify=False)
@@ -99,7 +99,7 @@ def test_export_to_vault_no_duplicates(vault_server):
         keepass_password='master1',
         keepass_keyfile=None,
         vault_url=vault_server['http'],
-        vault_backend='keepass',
+        vault_prefix='keepass/',
         vault_token=vault_server['token'],
         cert=(None, None),
         verify=False)
@@ -125,7 +125,7 @@ def test_client_cert(vault_server):
         keepass_password='master1',
         keepass_keyfile=None,
         vault_url=vault_server['https'],
-        vault_backend='keepass',
+        vault_prefix='keepass/',
         vault_token=vault_server['token'],
     )
 
@@ -178,7 +178,7 @@ def test_kv_v1(vault_server):
         keepass_password='master1',
         keepass_keyfile=None,
         vault_url=vault_server['http'],
-        vault_backend='keepass',
+        vault_prefix='keepass/',
         vault_token=vault_server['token'],
         cert=(None, None),
         verify=False)

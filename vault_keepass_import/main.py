@@ -22,13 +22,15 @@ class Importer(object):
 
     def __init__(self,
                  keepass_db, keepass_password, keepass_keyfile,
-                 vault_url, vault_token, vault_backend, cert, verify,
+                 vault_url, vault_token, vault_prefix, cert, verify,
                  version=None,
                  path='secret/'):
         self.path = path
-        self.vault_backend = vault_backend
         if not self.path.endswith('/'):
             self.path += '/'
+        self.prefix = vault_prefix
+        if not self.prefix.endswith('/'):
+            self.prefix += '/'
         self.keepass = PyKeePass(keepass_db, password=keepass_password, keyfile=keepass_keyfile)
         self.open_vault(vault_url, vault_token, cert, verify, version)
 
@@ -42,12 +44,12 @@ class Importer(object):
             self.vault_kv_version = mounts[self.path]['options']['version']
 
     @staticmethod
-    def get_path(vault_backend, entry):
+    def get_path(prefix, entry):
         path = entry.parentgroup.path
         if path[0] == '/':
-            return vault_backend + '/' + entry.title
+            return prefix + entry.title
         else:
-            return vault_backend + '/' + path + '/' + entry.title
+            return prefix + path + '/' + entry.title
 
     def export_entries(self, skip_root=False):
         all_entries = []
@@ -140,7 +142,7 @@ class Importer(object):
         r = {}
         for e in entries:
             entry = self.keepass_entry_to_dict(e)
-            entry_path = self.get_path(self.vault_backend, e)
+            entry_path = self.get_path(self.prefix, e)
             if force_lowercase:
                 entry_path = entry_path.lower()
             try:
@@ -254,7 +256,7 @@ def main():
     )
     parser.add_argument(
         '--path',
-        default='secret',
+        default='secret/',
         help='KV mount point',
     )
     parser.add_argument(
@@ -299,7 +301,7 @@ def main():
         keepass_keyfile=args.keyfile,
         vault_url=args.vault,
         vault_token=token,
-        vault_backend=args.backend,
+        vault_prefix=args.backend,
         cert=(args.client_cert, args.client_key),
         verify=verify,
         path=args.path,
