@@ -31,7 +31,7 @@ class Importer(object):
 
     def open_vault(self, vault_url, vault_token, cert, verify):
         self.vault = hvac.Client(url=vault_url, token=vault_token, cert=cert, verify=verify)
-        mounts = self.vault.list_secret_backends()['data']
+        mounts = self.vault.sys.list_mounted_secrets_engines()['data']
         path = self.path + '/'
         assert path in mounts, f'path {path} is not founds in mounts {mounts}'
         self.vault_kv_version = mounts[path]['options']['version']
