@@ -287,9 +287,9 @@ def main():
         help='An entry is overriden if it already exists, unless it is up to date'
     )
     parser.add_argument(
-        '-b', '--backend',
-        default='keepass',
-        help='Vault backend (destination of the import)'
+        '--prefix',
+        default='keepass/',
+        help='Vault prefix (destination of the import)'
     )
     parser.add_argument(
         '--path',
@@ -337,7 +337,7 @@ def main():
         keepass_keyfile=args.keyfile,
         vault_url=args.vault,
         vault_token=token,
-        vault_prefix=args.backend,
+        vault_prefix=args.prefix,
         cert=(args.client_cert, args.client_key),
         verify=verify,
         path=args.path,
