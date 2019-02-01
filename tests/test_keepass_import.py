@@ -22,12 +22,14 @@ def verify_withattachment(vault_server, kv_version):
     assert entry['username'] == 'user2'
     assert 'Notes' not in entry
 
+
 def verify_expected_secrets(results, state):
     assert results == {'keepass/Group1/title1group1': state,
                        'keepass/Group1/Group1a/title1group1a': state,
                        'keepass/withattachment': state,
                        'keepass/title1 (TJxu0nxlyEuaKYNYpi0NPQ==)': state,
                        'keepass/title1 (kFl/iRsoVUWDUdmmCDXwJg==)': state}
+
 
 def test_export_to_vault_imports_expected_fields(vault_server):
     importer = main.Importer(
@@ -42,6 +44,27 @@ def test_export_to_vault_imports_expected_fields(vault_server):
 
     verify_expected_secrets(importer.export_to_vault(), 'new')
     verify_withattachment(vault_server, '2')
+
+
+def test_delete_less_qualified_path(vault_server):
+    importer = main.Importer(
+        keepass_db='tests/test_db.kdbx',
+        keepass_password='master1',
+        keepass_keyfile=None,
+        vault_url=vault_server['http'],
+        vault_prefix='keepass/',
+        vault_token=vault_server['token'],
+        cert=(None, None),
+        verify=False)
+
+    less_qualified = 'keepass/title1'
+    importer.create_or_update_secret(less_qualified, {'something': 'else'})
+
+    verify_expected_secrets(importer.export_to_vault(), 'new')
+    verify_withattachment(vault_server, '2')
+
+    with pytest.raises(hvac.exceptions.InvalidPath):
+        importer.vault.secrets.kv.v2.read_secret_version(less_qualified)
 
 
 def test_export_to_vault_dry_run(vault_server):

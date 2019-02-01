@@ -6,12 +6,12 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import argparse
 import base64
+import collections
 import getpass
 import hvac
 from pykeepass import PyKeePass
 import logging
 import os
-import re
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s')
@@ -61,13 +61,32 @@ class Importer(object):
         else:
             return prefix + path + '/' + entry.title
 
-    def export_entries(self):
-        all_entries = []
+    def export_entries(self, force_lowercase):
+        entries = collections.defaultdict(list)
         kp = self.keepass
         for entry in kp.entries:
-            all_entries.append(entry)
-        logger.info('Total entries: {}'.format(len(all_entries)))
-        return all_entries
+            k = self.get_path(self.prefix, entry)
+            if force_lowercase:
+                k = k.lower()
+            v = self.keepass_entry_to_dict(entry)
+            entries[k].append(v)
+        logger.info('Total entries: {}'.format(len(entries)))
+        uniq_entries = {}
+        for k, vs in entries.items():
+            if len(vs) == 1:
+                uniq_entries[k] = vs[0]
+            else:
+                for v in vs:
+                    uniq_entries[(k, v['uuid'])] = v
+        return uniq_entries
+
+    def delete_secret(self, path):
+        if self.vault_kv_version == '2':
+            if not self.dry_run:
+                self.vault.secrets.kv.v2.delete_metadata_and_all_versions(path)
+        else:
+            if not self.dry_run:
+                self.vault.secrets.kv.v1.delete_secret(path)
 
     def erase(self, prefix):
         try:
@@ -90,41 +109,7 @@ class Importer(object):
                 self._erase(path)
             else:
                 logger.debug(f'erase {path}')
-                if self.vault_kv_version == '2':
-                    if not self.dry_run:
-                        self.vault.secrets.kv.v2.delete_metadata_and_all_versions(path)
-                else:
-                    if not self.dry_run:
-                        self.vault.secrets.kv.v1.delete_secret(path)
-
-    def get_next_similar_entry_index(self, entry_name):
-        client = self.vault
-        index = 0
-        try:
-            title = os.path.basename(entry_name)
-            d = os.path.dirname(entry_name)
-            if self.vault_kv_version == '2':
-                children = client.secrets.kv.v2.list_secrets(d)
-            else:
-                children = client.secrets.kv.v1.list_secrets(d)
-            for child in children['data']['keys']:
-                m = re.match(title + r' \((\d+)\)$', child)
-                if m:
-                    index = max(index, int(m.group(1)))
-        except hvac.exceptions.InvalidPath:
-            pass
-        except Exception:
-            raise
-        return index + 1
-
-    def generate_entry_path(self, entry_path):
-        next_entry_index = self.get_next_similar_entry_index(entry_path)
-        new_entry_path = '{} ({})'.format(entry_path, next_entry_index)
-        logger.info(
-            'Entry "{}" already exists, '
-            'creating a new one: "{}"'.format(entry_path, new_entry_path)
-        )
-        return new_entry_path
+                self.delete_secret(path)
 
     @staticmethod
     def keepass_entry_to_dict(e):
@@ -168,34 +153,58 @@ class Importer(object):
             impacted = f' {", ".join(info)}'
         return f'{state}: {path}{impacted}'
 
+    def read_secret(self, path):
+        if self.vault_kv_version == '2':
+            return self.vault.secrets.kv.v2.read_secret_version(path)['data']['data']
+        else:
+            return self.vault.secrets.kv.v1.read_secret(path)['data']
+
+    @staticmethod
+    def get_path_from_path_uuid(path_uuid):
+        if type(path_uuid) is str:
+            return path_uuid
+        else:
+            return f'{path_uuid[0]} ({path_uuid[1]})'
+
+    def get_existing(self, path_uuid):
+        path = self.get_path_from_path_uuid(path_uuid)
+        try:
+            exists = self.read_secret(path)
+        except hvac.exceptions.InvalidPath:
+            exists = {}
+        except Exception:
+            raise
+        return (path, exists)
+
+    def delete_less_qualified_path(self, path_uuid):
+        # if path_uuid is a string, there is no uuid therefore nothing to look for
+        if type(path_uuid) is str:
+            return
+        # if the unqualified_path exists, remove it
+        unqualified_path = path_uuid[0]
+        (path, exists) = self.get_existing(unqualified_path)
+        if exists:
+            self.delete_secret(unqualified_path)
+
+    def create_or_update_secret(self, path, entry):
+        if self.vault_kv_version == '2':
+            self.vault.secrets.kv.v2.create_or_update_secret(path, entry)
+        else:
+            self.vault.secrets.kv.v1.create_or_update_secret(path, entry)
+
     def export_to_vault(self, force_lowercase=False):
-        entries = self.export_entries()
-        client = self.vault
+        entries = self.export_entries(force_lowercase)
         r = {}
-        for e in entries:
-            entry = self.keepass_entry_to_dict(e)
-            entry_path = self.get_path(self.prefix, e)
-            if force_lowercase:
-                entry_path = entry_path.lower()
-            try:
-                if self.vault_kv_version == '2':
-                    exists = client.secrets.kv.v2.read_secret_version(entry_path)['data']['data']
-                else:
-                    exists = client.secrets.kv.v1.read_secret(entry_path)['data']
-            except hvac.exceptions.InvalidPath:
-                exists = {}
-            except Exception:
-                raise
+        for path_uuid, entry in entries.items():
+            (path, exists) = self.get_existing(path_uuid)
             if exists:
-                r[entry_path] = entry == exists and 'ok' or 'changed'
+                r[path] = entry == exists and 'ok' or 'changed'
             else:
-                r[entry_path] = 'new'
-            logger.info(self.export_info(r[entry_path], entry_path, exists, entry))
-            if not self.dry_run and r[entry_path] in ('changed', 'new'):
-                if self.vault_kv_version == '2':
-                    client.secrets.kv.v2.create_or_update_secret(entry_path, entry)
-                else:
-                    client.secrets.kv.v1.create_or_update_secret(entry_path, entry)
+                r[path] = 'new'
+            logger.info(self.export_info(r[path], path, exists, entry))
+            if not self.dry_run and r[path] in ('changed', 'new'):
+                self.create_or_update_secret(path, entry)
+            self.delete_less_qualified_path(path_uuid)
         return r
 
 

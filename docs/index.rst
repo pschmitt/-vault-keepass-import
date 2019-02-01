@@ -11,13 +11,25 @@ Vault <https://learn.hashicorp.com/vault/getting-started/install>`_
 Bugs and feature requests can be found `in the issue tracker
 <https://lab.enough.community/singuliere/vault-keepass-import/issues>`_
 
-The `Title` of the entry is used as the last component of the secret path. For instance if importing an entry with `Title` `mysecret` in the `mygroup` group, the path `secret/keepass/mygroup/mysecret` will be used.
+The `Title` of the entry is used as the last component of the secret
+path. For instance if importing an entry with `Title` `mysecret` in
+the `mygroup` group, the path `secret/keepass/mygroup/mysecret` will
+be used.
+
+There may be multiple entries with the same title in a group. The path
+is made unique by appending the `UUID` of the entry to the title. For
+instance to entries with the same `title1` in the group `group1` will
+be imported as `group1/title1 (TJxu0nxlyEuaKYNYpi0NPQ==)` and
+`group1/title1 (kFl/iRsoVUWDUdmmCDXwJg==)`. The `UUID` is not appended
+if the title is unique.
 
 * `User name` from the `Entry` tab is imported as is under the key `username`
 * `Password` from the `Entry` tab is imported as is under the key `password`
 * `URL` from the `Entry` tab is imported as is under the key `password`
 * `Notes` from the `Entry` tab is imported as is under the key `notes`
-* `Expires` from the `Entry` tab is imported under the key `expiry_time`. It is only imported if set and converted to `epoch <https://en.wikipedia.org/wiki/Unix_time>`_.
+* `Expires` from the `Entry` tab is imported under the key
+  `expiry_time`. It is only imported if set and converted to `epoch
+  <https://en.wikipedia.org/wiki/Unix_time>`_.
 * `Tags` from the `Properties` tab is imported as is under the key `tags`
 * `UUID` from the `Properties` tab is imported as is under the key `uuid`
 * `String fields` from the `Advanced` tab are imported as is with a key
