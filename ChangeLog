@@ -1,6 +1,22 @@
 CHANGES
 =======
 
+1.0.10
+------
+
+* version 1.0.10
+* rework the title conflict resolution logic
+* verify\_expected\_secrets test helper to keep them DRY
+* remove --skip-root because it does not help make the paths shorter
+* remove --idempotent
+* remplace --backend with --prefix
+* implement --erase to recursively erase the secret prefix
+* add switch\_to\_kv\_v1 test helper
+* implement Importer.set\_verbosity
+* move dry-run to the contructor
+* rename backend into prefix and ensure it ends with /
+* implement --kv-version to force the KV version
+
 1.0.9
 -----
 
