@@ -70,6 +70,29 @@ def test_export_to_vault_imports_expected_fields(vault_server):
     verify_withattachment(vault_server, '2')
 
 
+def test_export_to_vault_dry_run(vault_server):
+    importer = main.Importer(
+        keepass_db='tests/test_db.kdbx',
+        keepass_password='master1',
+        keepass_keyfile=None,
+        vault_url=vault_server['http'],
+        vault_backend='keepass',
+        vault_token=vault_server['token'],
+        cert=(None, None),
+        verify=False)
+
+    r1 = importer.export_to_vault(dry_run=True)
+    assert r1 == {'keepass/title1': 'new',
+                  'keepass/Group1/title1group1': 'new',
+                  'keepass/Group1/Group1a/title1group1a': 'new',
+                  'keepass/withattachment': 'new'}
+    r2 = importer.export_to_vault(dry_run=True)
+    assert r2 == {'keepass/title1': 'new',
+                  'keepass/Group1/title1group1': 'new',
+                  'keepass/Group1/Group1a/title1group1a': 'new',
+                  'keepass/withattachment': 'new'}
+
+
 def test_export_to_vault_no_duplicates(vault_server):
     importer = main.Importer(
         keepass_db='tests/test_db.kdbx',
@@ -163,3 +186,18 @@ def test_kv_v1(vault_server):
     r0 = importer.export_to_vault()
     assert 'keepass/title1' in r0
     verify_withattachment(vault_server, '1')
+
+
+def test_export_info():
+    assert main.Importer.export_info('ok', 'PATH', {}, {}) == 'ok: PATH'
+    assert main.Importer.export_info('changed', 'PATH', {
+        'removed1': 'v1',
+        'removed2': 'v2',
+        'identical': 'v3',
+        'different': 'K1',
+    }, {
+        'identical': 'v3',
+        'different': 'K2',
+        'added1': 'v4',
+        'added2': 'v4',
+    }) == 'changed: PATH added added1 added2, removed removed1 removed2, changed different'

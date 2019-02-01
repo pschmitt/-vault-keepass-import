@@ -105,13 +105,31 @@ class Importer(object):
         return entry
 
     @staticmethod
-    def vault_entry_to_dict(e):
-        return e['data']['data']
+    def export_info(state, path, old, new):
+        if state == 'ok':
+            impacted = ''
+        else:
+            info = []
+            added = sorted(set(new.keys()) - set(old.keys()))
+            if added:
+                info.append(f'added {" ".join(added)}')
+            removed = sorted(set(old.keys()) - set(new.keys()))
+            if removed:
+                info.append(f'removed {" ".join(removed)}')
+            changed = []
+            for k in sorted(set(old.keys()) & set(new.keys())):
+                if old[k] != new[k]:
+                    changed.append(k)
+            if changed:
+                info.append(f'changed {" ".join(changed)}')
+            impacted = f' {", ".join(info)}'
+        return f'{state}: {path}{impacted}'
 
     def export_to_vault(self,
                         force_lowercase=False,
                         skip_root=False,
-                        allow_duplicates=True):
+                        allow_duplicates=True,
+                        dry_run=False):
         entries = self.export_entries(skip_root)
         client = self.vault
         r = {}
@@ -122,11 +140,11 @@ class Importer(object):
                 entry_path = entry_path.lower()
             try:
                 if self.vault_kv_version == '2':
-                    exists = client.secrets.kv.v2.read_secret_version(entry_path)
+                    exists = client.secrets.kv.v2.read_secret_version(entry_path)['data']['data']
                 else:
-                    exists = client.secrets.kv.v1.read_secret(entry_path)
+                    exists = client.secrets.kv.v1.read_secret(entry_path)['data']
             except hvac.exceptions.InvalidPath:
-                exists = None
+                exists = {}
             except Exception:
                 raise
             if allow_duplicates:
@@ -135,11 +153,11 @@ class Importer(object):
                 r[entry_path] = 'new'
             else:
                 if exists:
-                    r[entry_path] = entry == self.vault_entry_to_dict(exists) and 'ok' or 'changed'
+                    r[entry_path] = entry == exists and 'ok' or 'changed'
                 else:
                     r[entry_path] = 'new'
-            logger.info(f'{r[entry_path]}: {entry_path} => {entry}')
-            if r[entry_path] in ('changed', 'new'):
+            logger.info(self.export_info(r[entry_path], entry_path, exists, entry))
+            if not dry_run and r[entry_path] in ('changed', 'new'):
                 if self.vault_kv_version == '2':
                     client.secrets.kv.v2.create_or_update_secret(entry_path, entry)
                 else:
@@ -189,6 +207,12 @@ def main():
         action='store_true',
         required=False,
         help='Skip KeePass root folder (shorter paths)'
+    )
+    parser.add_argument(
+        '--dry-run',
+        action='store_true',
+        required=False,
+        help='Show what would be done but do nothing'
     )
     parser.add_argument(
         '--ca-cert',
@@ -272,5 +296,6 @@ def main():
     importer.export_to_vault(
         force_lowercase=args.lowercase,
         skip_root=args.skip_root,
-        allow_duplicates=not args.idempotent
+        allow_duplicates=not args.idempotent,
+        dry_run=args.dry_run,
     )
