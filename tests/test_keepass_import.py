@@ -22,6 +22,12 @@ def verify_withattachment(vault_server, kv_version):
     assert entry['username'] == 'user2'
     assert 'Notes' not in entry
 
+def verify_expected_secrets(results, state):
+    assert results == {'keepass/Group1/title1group1': state,
+                       'keepass/Group1/Group1a/title1group1a': state,
+                       'keepass/withattachment': state,
+                       'keepass/title1 (TJxu0nxlyEuaKYNYpi0NPQ==)': state,
+                       'keepass/title1 (kFl/iRsoVUWDUdmmCDXwJg==)': state}
 
 def test_export_to_vault_imports_expected_fields(vault_server):
     importer = main.Importer(
@@ -34,11 +40,7 @@ def test_export_to_vault_imports_expected_fields(vault_server):
         cert=(None, None),
         verify=False)
 
-    r1 = importer.export_to_vault()
-    assert r1 == {'keepass/title1': 'new',
-                  'keepass/Group1/title1group1': 'new',
-                  'keepass/Group1/Group1a/title1group1a': 'new',
-                  'keepass/withattachment': 'new'}
+    verify_expected_secrets(importer.export_to_vault(), 'new')
     verify_withattachment(vault_server, '2')
 
 
@@ -54,16 +56,8 @@ def test_export_to_vault_dry_run(vault_server):
         verify=False,
         dry_run=True)
 
-    r1 = importer.export_to_vault()
-    assert r1 == {'keepass/title1': 'new',
-                  'keepass/Group1/title1group1': 'new',
-                  'keepass/Group1/Group1a/title1group1a': 'new',
-                  'keepass/withattachment': 'new'}
-    r2 = importer.export_to_vault()
-    assert r2 == {'keepass/title1': 'new',
-                  'keepass/Group1/title1group1': 'new',
-                  'keepass/Group1/Group1a/title1group1a': 'new',
-                  'keepass/withattachment': 'new'}
+    verify_expected_secrets(importer.export_to_vault(), 'new')
+    verify_expected_secrets(importer.export_to_vault(), 'new')
 
 
 def test_export_to_vault(vault_server):
@@ -77,19 +71,8 @@ def test_export_to_vault(vault_server):
         cert=(None, None),
         verify=False)
 
-    r0 = importer.export_to_vault()
-    assert r0 == {'keepass/title1': 'new',
-                  'keepass/Group1/title1group1': 'new',
-                  'keepass/Group1/Group1a/title1group1a': 'new',
-                  'keepass/withattachment': 'new'}
-    r1 = importer.export_to_vault()
-    # converged
-    r2 = importer.export_to_vault()
-    assert all(map(lambda x: x == 'ok', r2.values()))
-    assert r1.keys() == r2.keys()
-    # idempotent
-    r3 = importer.export_to_vault()
-    assert r2 == r3
+    verify_expected_secrets(importer.export_to_vault(), 'new')
+    verify_expected_secrets(importer.export_to_vault(), 'ok')
 
 
 def test_erase(vault_server):
@@ -131,10 +114,7 @@ def test_client_cert(vault_server):
             cert=(vault_server['crt'], vault_server['key']),
             **kwargs,
         ).export_to_vault()
-    assert r0 == {'keepass/title1': 'new',
-                  'keepass/Group1/title1group1': 'new',
-                  'keepass/Group1/Group1a/title1group1a': 'new',
-                  'keepass/withattachment': 'new'}
+    verify_expected_secrets(r0, 'new')
 
     # SUCCESS with CA missing but verify False  and client certificate provided
     r0 = main.Importer(
@@ -142,10 +122,7 @@ def test_client_cert(vault_server):
             cert=(vault_server['crt'], vault_server['key']),
             **kwargs,
         ).export_to_vault()
-    assert r0 == {'keepass/title1': 'ok',
-                  'keepass/Group1/title1group1': 'ok',
-                  'keepass/Group1/Group1a/title1group1a': 'ok',
-                  'keepass/withattachment': 'ok'}
+    verify_expected_secrets(r0, 'ok')
 
     # FAILURE with missing client certificate
     with pytest.raises(requests.exceptions.SSLError):
@@ -183,8 +160,7 @@ def test_kv_v1(vault_server):
         cert=(None, None),
         verify=False)
 
-    r0 = importer.export_to_vault()
-    assert 'keepass/title1' in r0
+    verify_expected_secrets(importer.export_to_vault(), 'new')
     verify_withattachment(vault_server, '1')
 
 
