@@ -61,12 +61,10 @@ class Importer(object):
         else:
             return prefix + path + '/' + entry.title
 
-    def export_entries(self, skip_root=False):
+    def export_entries(self):
         all_entries = []
         kp = self.keepass
         for entry in kp.entries:
-            if skip_root and entry.parentgroup.path == '/':
-                continue
             all_entries.append(entry)
         logger.info('Total entries: {}'.format(len(all_entries)))
         return all_entries
@@ -170,10 +168,8 @@ class Importer(object):
             impacted = f' {", ".join(info)}'
         return f'{state}: {path}{impacted}'
 
-    def export_to_vault(self,
-                        force_lowercase=False,
-                        skip_root=False):
-        entries = self.export_entries(skip_root)
+    def export_to_vault(self, force_lowercase=False):
+        entries = self.export_entries()
         client = self.vault
         r = {}
         for e in entries:
@@ -245,12 +241,6 @@ def main():
         default=True if os.getenv('VAULT_SKIP_VERIFY', False) else False,
         required=False,
         help='Whether to skip TLS cert verification'
-    )
-    parser.add_argument(
-        '-s', '--skip-root',
-        action='store_true',
-        required=False,
-        help='Skip KeePass root folder (shorter paths)'
     )
     parser.add_argument(
         '--dry-run',
@@ -337,5 +327,4 @@ def main():
         importer.erase(importer.prefix)
     importer.export_to_vault(
         force_lowercase=args.lowercase,
-        skip_root=args.skip_root,
     )
