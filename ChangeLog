@@ -1,6 +1,15 @@
 CHANGES
 =======
 
+1.0.9
+-----
+
+* version 1.0.9
+* implement --dry-run and more informative log infos
+* upgrade to using sys.list\_mounted\_secrets\_engines
+* distinguish between 'new' and 'changed' entries
+* remove --erase because it does not actually erase anything
+
 1.0.8
 -----
 
