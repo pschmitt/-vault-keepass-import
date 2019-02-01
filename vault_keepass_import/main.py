@@ -23,8 +23,10 @@ class Importer(object):
     def __init__(self,
                  keepass_db, keepass_password, keepass_keyfile,
                  vault_url, vault_token, vault_prefix, cert, verify,
+                 dry_run=False,
                  version=None,
                  path='secret/'):
+        self.dry_run = dry_run
         self.path = path
         if not self.path.endswith('/'):
             self.path += '/'
@@ -135,8 +137,7 @@ class Importer(object):
     def export_to_vault(self,
                         force_lowercase=False,
                         skip_root=False,
-                        allow_duplicates=True,
-                        dry_run=False):
+                        allow_duplicates=True):
         entries = self.export_entries(skip_root)
         client = self.vault
         r = {}
@@ -164,7 +165,7 @@ class Importer(object):
                 else:
                     r[entry_path] = 'new'
             logger.info(self.export_info(r[entry_path], entry_path, exists, entry))
-            if not dry_run and r[entry_path] in ('changed', 'new'):
+            if not self.dry_run and r[entry_path] in ('changed', 'new'):
                 if self.vault_kv_version == '2':
                     client.secrets.kv.v2.create_or_update_secret(entry_path, entry)
                 else:
@@ -306,10 +307,13 @@ def main():
         verify=verify,
         path=args.path,
         version=args.kv_version,
+        dry_run=args.dry_run,
     )
+    importer.set_verbosity(args.verbose)
+    if args.erase:
+        importer.erase(importer.prefix)
     importer.export_to_vault(
         force_lowercase=args.lowercase,
         skip_root=args.skip_root,
         allow_duplicates=not args.idempotent,
-        dry_run=args.dry_run,
     )

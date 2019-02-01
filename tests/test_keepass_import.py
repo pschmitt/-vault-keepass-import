@@ -79,14 +79,15 @@ def test_export_to_vault_dry_run(vault_server):
         vault_prefix='keepass/',
         vault_token=vault_server['token'],
         cert=(None, None),
-        verify=False)
+        verify=False,
+        dry_run=True)
 
-    r1 = importer.export_to_vault(dry_run=True)
+    r1 = importer.export_to_vault()
     assert r1 == {'keepass/title1': 'new',
                   'keepass/Group1/title1group1': 'new',
                   'keepass/Group1/Group1a/title1group1a': 'new',
                   'keepass/withattachment': 'new'}
-    r2 = importer.export_to_vault(dry_run=True)
+    r2 = importer.export_to_vault()
     assert r2 == {'keepass/title1': 'new',
                   'keepass/Group1/title1group1': 'new',
                   'keepass/Group1/Group1a/title1group1a': 'new',
