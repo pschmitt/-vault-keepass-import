@@ -169,10 +169,14 @@ def test_client_cert(vault_server):
         ).export_to_vault(allow_duplicates=False)
 
 
-def test_kv_v1(vault_server):
+def switch_to_kv_v1(vault_server):
     client = hvac.Client(url=vault_server['http'], token=vault_server['token'])
-    client.sys.disable_secrets_engine(path='secret')
-    client.sys.enable_secrets_engine(backend_type='kv', options={'version': '1'}, path='secret')
+    client.sys.disable_secrets_engine(path='secret/')
+    client.sys.enable_secrets_engine(backend_type='kv', options={'version': '1'}, path='secret/')
+
+
+def test_kv_v1(vault_server):
+    switch_to_kv_v1(vault_server)
 
     importer = main.Importer(
         keepass_db='tests/test_db.kdbx',
