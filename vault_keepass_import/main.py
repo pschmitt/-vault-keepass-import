@@ -23,18 +23,23 @@ class Importer(object):
     def __init__(self,
                  keepass_db, keepass_password, keepass_keyfile,
                  vault_url, vault_token, vault_backend, cert, verify,
-                 path='secret'):
+                 version=None,
+                 path='secret/'):
         self.path = path
         self.vault_backend = vault_backend
+        if not self.path.endswith('/'):
+            self.path += '/'
         self.keepass = PyKeePass(keepass_db, password=keepass_password, keyfile=keepass_keyfile)
-        self.open_vault(vault_url, vault_token, cert, verify)
+        self.open_vault(vault_url, vault_token, cert, verify, version)
 
-    def open_vault(self, vault_url, vault_token, cert, verify):
+    def open_vault(self, vault_url, vault_token, cert, verify, version):
         self.vault = hvac.Client(url=vault_url, token=vault_token, cert=cert, verify=verify)
-        mounts = self.vault.sys.list_mounted_secrets_engines()['data']
-        path = self.path + '/'
-        assert path in mounts, f'path {path} is not founds in mounts {mounts}'
-        self.vault_kv_version = mounts[path]['options']['version']
+        if version:
+            self.vault_kv_version = version
+        else:
+            mounts = self.vault.sys.list_mounted_secrets_engines()['data']
+            assert self.path in mounts, f'path {self.path} is not founds in mounts {mounts}'
+            self.vault_kv_version = mounts[self.path]['options']['version']
 
     @staticmethod
     def get_path(vault_backend, entry):
@@ -179,6 +184,12 @@ def main():
         help='Password to unlock the KeePass database'
     )
     parser.add_argument(
+        '--kv-version',
+        choices=['1', '2'],
+        required=False,
+        help='Force the Vault KV backend version (1 or 2). Autodetect if not set.'
+    )
+    parser.add_argument(
         '-f', '--keyfile',
         required=False,
         help='Keyfile to unlock the KeePass database'
@@ -292,6 +303,7 @@ def main():
         cert=(args.client_cert, args.client_key),
         verify=verify,
         path=args.path,
+        version=args.kv_version,
     )
     importer.export_to_vault(
         force_lowercase=args.lowercase,
