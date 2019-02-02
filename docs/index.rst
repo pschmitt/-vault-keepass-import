@@ -108,9 +108,10 @@ Testing the import
 Command help
 ~~~~~~~~~~~~
 
-.. code::
-
-   vault-keepass-import --help
+.. argparse::
+   :module: vault_keepass_import.main
+   :func: parser
+   :prog: vault-keepass-import
 
 Contributions
 =============

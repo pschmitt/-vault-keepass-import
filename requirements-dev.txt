@@ -46,6 +46,7 @@ requests==2.21.0          # via hvac, sphinx
 sh==1.12.14
 six==1.12.0               # via argon2-cffi, more-itertools, packaging, pip-tools, pytest, python-dateutil, sphinx, tox
 snowballstemmer==1.2.1    # via sphinx
+sphinx-argparse==0.2.5
 sphinx==1.8.3
 sphinxcontrib-websupport==1.1.0  # via sphinx
 toml==0.10.0              # via tox

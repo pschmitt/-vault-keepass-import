@@ -1,3 +1,4 @@
+import argparse
 from vault_keepass_import import main
 import hvac
 import pytest
@@ -227,3 +228,7 @@ def test_vault_secret_operators(vault_server, version):
     importer.erase(prefix)
     with pytest.raises(hvac.exceptions.InvalidPath):
         importer.read_secret(secret_key)
+
+
+def test_parser():
+    assert type(main.parser()) == argparse.ArgumentParser

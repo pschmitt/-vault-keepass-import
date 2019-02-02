@@ -212,7 +212,7 @@ class Importer(object):
         return r
 
 
-def main():
+def parser():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--verbose',
@@ -301,8 +301,11 @@ def main():
         'KDBX',
         help='Path to the KeePass database'
     )
-    args = parser.parse_args()
+    return parser
 
+
+def main():
+    args = parser().parse_args()
     password = args.password if args.password else getpass.getpass()
     if args.token:
         # If provided argument is a file read from it
