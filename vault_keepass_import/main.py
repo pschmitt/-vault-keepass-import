@@ -25,11 +25,9 @@ class Importer(object):
                  vault_url, vault_token, vault_prefix, cert, verify,
                  dry_run=False,
                  version=None,
-                 path='secret/'):
+                 path='secret'):
         self.dry_run = dry_run
         self.path = path
-        if not self.path.endswith('/'):
-            self.path += '/'
         self.prefix = vault_prefix
         if not self.prefix.endswith('/'):
             self.prefix += '/'
@@ -42,8 +40,9 @@ class Importer(object):
             self.vault_kv_version = version
         else:
             mounts = self.vault.sys.list_mounted_secrets_engines()['data']
-            assert self.path in mounts, f'path {self.path} is not founds in mounts {mounts}'
-            self.vault_kv_version = mounts[self.path]['options']['version']
+            path = self.path + '/'
+            assert path in mounts, f'path {path} is not founds in mounts {mounts}'
+            self.vault_kv_version = mounts[path]['options']['version']
 
     @staticmethod
     def set_verbosity(verbose):
@@ -83,26 +82,29 @@ class Importer(object):
     def delete_secret(self, path):
         if self.vault_kv_version == '2':
             if not self.dry_run:
-                self.vault.secrets.kv.v2.delete_metadata_and_all_versions(path)
+                self.vault.secrets.kv.v2.delete_metadata_and_all_versions(
+                    path, mount_point=self.path)
         else:
             if not self.dry_run:
-                self.vault.secrets.kv.v1.delete_secret(path)
+                self.vault.secrets.kv.v1.delete_secret(path, mount_point=self.path)
 
     def erase(self, prefix):
         try:
             if self.vault_kv_version == '2':
-                self.vault.secrets.kv.v2.list_secrets(prefix)
+                self.vault.secrets.kv.v2.list_secrets(prefix, mount_point=self.path)
             else:
-                self.vault.secrets.kv.v1.list_secrets(prefix)
+                self.vault.secrets.kv.v1.list_secrets(prefix, mount_point=self.path)
         except hvac.exceptions.InvalidPath:
             return
         self._erase(prefix)
 
     def _erase(self, prefix):
         if self.vault_kv_version == '2':
-            keys = self.vault.secrets.kv.v2.list_secrets(prefix)['data']['keys']
+            keys = self.vault.secrets.kv.v2.list_secrets(
+                prefix, mount_point=self.path)['data']['keys']
         else:
-            keys = self.vault.secrets.kv.v1.list_secrets(prefix)['keys']
+            keys = self.vault.secrets.kv.v1.list_secrets(
+                prefix, mount_point=self.path)['data']['keys']
         for key in keys:
             path = prefix + key
             if path.endswith('/'):
@@ -155,9 +157,11 @@ class Importer(object):
 
     def read_secret(self, path):
         if self.vault_kv_version == '2':
-            return self.vault.secrets.kv.v2.read_secret_version(path)['data']['data']
+            return self.vault.secrets.kv.v2.read_secret_version(
+                path, mount_point=self.path)['data']['data']
         else:
-            return self.vault.secrets.kv.v1.read_secret(path)['data']
+            return self.vault.secrets.kv.v1.read_secret(
+                path, mount_point=self.path)['data']
 
     @staticmethod
     def get_path_from_path_uuid(path_uuid):
@@ -188,9 +192,9 @@ class Importer(object):
 
     def create_or_update_secret(self, path, entry):
         if self.vault_kv_version == '2':
-            self.vault.secrets.kv.v2.create_or_update_secret(path, entry)
+            self.vault.secrets.kv.v2.create_or_update_secret(path, entry, mount_point=self.path)
         else:
-            self.vault.secrets.kv.v1.create_or_update_secret(path, entry)
+            self.vault.secrets.kv.v1.create_or_update_secret(path, entry, mount_point=self.path)
 
     def export_to_vault(self, force_lowercase=False):
         entries = self.export_entries(force_lowercase)

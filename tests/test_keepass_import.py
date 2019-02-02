@@ -200,3 +200,30 @@ def test_export_info():
         'added1': 'v4',
         'added2': 'v4',
     }) == 'changed: PATH added added1 added2, removed removed1 removed2, changed different'
+
+
+@pytest.mark.parametrize("version", ['1', '2'])
+def test_vault_secret_operators(vault_server, version):
+    path = 'mysecrets'
+    client = hvac.Client(url=vault_server['http'], token=vault_server['token'])
+    client.sys.enable_secrets_engine(backend_type='kv', options={'version': version}, path=path)
+
+    prefix = 'keepass/'
+    importer = main.Importer(
+        keepass_db='tests/test_db.kdbx',
+        keepass_password='master1',
+        keepass_keyfile=None,
+        vault_url=vault_server['http'],
+        vault_prefix=prefix,
+        vault_token=vault_server['token'],
+        cert=(None, None),
+        verify=False,
+        path=path)
+
+    secret_key = prefix + 'my/key'
+    secret_value = {'field': 'value'}
+    importer.create_or_update_secret(secret_key, secret_value)
+    assert importer.read_secret(secret_key) == secret_value
+    importer.erase(prefix)
+    with pytest.raises(hvac.exceptions.InvalidPath):
+        importer.read_secret(secret_key)
