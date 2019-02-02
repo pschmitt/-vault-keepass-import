@@ -17,6 +17,8 @@ import os
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s')
 logger = logging.getLogger(__name__)
 
+DEFAULT_VAULT_ADDR = 'https://127.0.0.1:8200'
+
 
 class Importer(object):
 
@@ -221,39 +223,70 @@ def parser():
         help='Verbose mode'
     )
     parser.add_argument(
-        '-p', '--password',
-        required=False,
-        help='Password to unlock the KeePass database'
-    )
-    parser.add_argument(
         '--kv-version',
         choices=['1', '2'],
         required=False,
-        help='Force the Vault KV backend version (1 or 2). Autodetect if not set.'
-    )
-    parser.add_argument(
-        '-f', '--keyfile',
-        required=False,
-        help='Keyfile to unlock the KeePass database'
+        help=('Force the Vault KV backend version (1 or 2). '
+              'Autodetect from `vault read /sys/mounts` if not set.')
     )
     parser.add_argument(
         '-t', '--token',
         required=False,
-        default=os.getenv('VAULT_TOKEN', None),
-        help='Vault token'
+        default=os.getenv('VAULT_TOKEN'),
+        help=('Vault token. It will be prompted interactively if unset. '
+              'This can also be specified via the VAULT_TOKEN environment variable.')
     )
     parser.add_argument(
         '-v', '--vault',
-        default=os.getenv('VAULT_ADDR', 'https://localhost:8200'),
+        default=os.getenv('VAULT_ADDR', DEFAULT_VAULT_ADDR),
         required=False,
-        help='Vault URL'
+        help=('Address of the Vault server. The default is https://127.0.0.1:8200. '
+              'This can also be specified via the VAULT_ADDR environment variable.')
     )
     parser.add_argument(
         '-k', '--ssl-no-verify',
         action='store_true',
         default=True if os.getenv('VAULT_SKIP_VERIFY', False) else False,
         required=False,
-        help='Whether to skip TLS cert verification'
+        help=('Disable verification of TLS certificates. Using this option is highly '
+              'discouraged and decreases the security of data transmissions to and from '
+              'the Vault server. The default is false. '
+              'This can also be specified via the VAULT_SKIP_VERIFY environment variable.')
+    )
+    parser.add_argument(
+        '--ca-cert',
+        default=os.getenv('VAULT_CACERT'),
+        required=False,
+        help=('Path on the local disk to a single PEM-encoded CA certificate to verify '
+              'the Vault server\'s SSL certificate. '
+              'This can also be specified via the VAULT_CACERT environment variable. ')
+    )
+    parser.add_argument(
+        '--client-cert',
+        default=os.getenv('VAULT_CLIENT_CERT'),
+        required=False,
+        help=('Path on the local disk to a single PEM-encoded CA certificate to use '
+              'for TLS authentication to the Vault server. If this flag is specified, '
+              '--client-key is also required. '
+              'This can also be specified via the VAULT_CLIENT_CERT environment variable.')
+    )
+    parser.add_argument(
+        '--client-key',
+        default=os.getenv('VAULT_CLIENT_KEY'),
+        required=False,
+        help=('Path on the local disk to a single PEM-encoded private key matching the '
+              'client certificate from -client-cert. '
+              'This can also be specified via the VAULT_CLIENT_KEY environment variable.')
+    )
+    parser.add_argument(
+        '-p', '--password',
+        required=False,
+        help='Password to unlock the KeePass database. Prompted interactively if not set.'
+    )
+    parser.add_argument(
+        '-f', '--keyfile',
+        required=False,
+        help='Keyfile path to unlock the KeePass database'
     )
     parser.add_argument(
         '--dry-run',
@@ -262,35 +295,19 @@ def parser():
         help='Show what would be done but do nothing'
     )
     parser.add_argument(
-        '--ca-cert',
-        required=False,
-        help=("Path on the local disk to a single PEM-encoded CA certificate to verify "
-              "the Vault server's SSL certificate.")
-    )
-    parser.add_argument(
-        '--client-cert',
-        required=False,
-        help='client cert file'
-    )
-    parser.add_argument(
-        '--client-key',
-        required=False,
-        help='client key file'
-    )
-    parser.add_argument(
         '--prefix',
         default='keepass/',
         help='Vault prefix (destination of the import)'
     )
     parser.add_argument(
         '--path',
-        default='secret/',
-        help='KV mount point',
+        default='secret',
+        help='KV path mount point',
     )
     parser.add_argument(
         '-e', '--erase',
         action='store_true',
-        help='Erase the prefix prior to the import operation'
+        help='Erase the prefix (see --prefix) prior to the import operation'
     )
     parser.add_argument(
         '-l', '--lowercase',
