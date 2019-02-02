@@ -231,4 +231,7 @@ def test_vault_secret_operators(vault_server, version):
 
 
 def test_parser():
-    assert type(main.parser()) == argparse.ArgumentParser
+    parser = main.parser()
+    assert type(parser) == argparse.ArgumentParser
+    with pytest.raises(SystemExit):
+        parser.parse_args(['--version'])

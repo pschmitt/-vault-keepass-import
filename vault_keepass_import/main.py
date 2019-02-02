@@ -10,6 +10,7 @@ import collections
 import getpass
 import hvac
 from pykeepass import PyKeePass
+from vault_keepass_import.version import __version__
 import logging
 import os
 
@@ -216,6 +217,9 @@ class Importer(object):
 
 def parser():
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--version', action='version', version=f'%(prog)s {__version__}'
+    )
     parser.add_argument(
         '--verbose',
         action='store_true',
