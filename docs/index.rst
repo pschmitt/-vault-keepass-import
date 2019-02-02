@@ -18,7 +18,7 @@ be used.
 
 There may be multiple entries with the same title in a group. The path
 is made unique by appending the `UUID` of the entry to the title. For
-instance to entries with the same `title1` in the group `group1` will
+instance two entries with the same `title1` in the group `group1` will
 be imported as `group1/title1 (TJxu0nxlyEuaKYNYpi0NPQ==)` and
 `group1/title1 (kFl/iRsoVUWDUdmmCDXwJg==)`. The `UUID` is not appended
 if the title is unique.
