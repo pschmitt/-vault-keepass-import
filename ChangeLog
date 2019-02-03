@@ -1,6 +1,23 @@
 CHANGES
 =======
 
+1.0.12
+------
+
+* version 1.0.12
+* strip trailing / from path
+* doc: fix typo
+* wrap RTD cell contents
+* move docutil.conf up one level
+* we need the readthedocs.yml after all to specify the latest image
+* formatting doc lines for readthedocs
+* look for the right sys.path (take 1)
+* doc needs the modules from the upper directory
+* readthedocs: add method pip
+* .readthedocs.yml only supports up to 3.6
+* use the latest .readthedocs.yml image
+* setup .readthedocs.yml so it reads requirements-dev.txt
+
 1.0.11
 ------
 
