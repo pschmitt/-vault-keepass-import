@@ -53,10 +53,8 @@ Quick start
    $ pip3 install vault-keepass-import
    $ export VAULT_ADDR=https://myvault.com:8200
    $ export VAULT_TOKEN=mytoken
-   $ vault-keepass-import --token $VAULT_TOKEN \
-			  --vault $VAULT_ADDR \
-			  --password kdbxpassword \
-			  database.kdbx
+   $ vault-keepass-import database.kdbx
+   KeePass password:
    $ vault kv list secret/keepass
    Keys
    ----
@@ -91,16 +89,13 @@ Testing the import
 
   .. code::
 
-     $ vault server -dev
-     ...
-     Root Token: s.PTNNfrICGosELrJeX2ojPIS6
-     ...
+     $ vault server -dev -dev-root-token-id=mytoken
 
 * Assuming the password to the KeePass database is `kdbxpassword`, run an import with:
 
   .. code::
 
-     $ vault-keepass-import --token s.PTNNfrICGosELrJeX2ojPIS6 \
+     $ vault-keepass-import --token mytoken \
 			    --vault http://127.0.0.1:8200 \
 			    --password kdbxpassword \
 			    database.kdbx
