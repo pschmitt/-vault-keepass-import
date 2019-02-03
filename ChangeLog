@@ -1,6 +1,19 @@
 CHANGES
 =======
 
+1.0.11
+------
+
+* version 1.0.11
+* simplify the examples in the documentation
+* add the modified\_environment context manager
+* test argument parsing
+* implement --version
+* copy/paste --help from vault
+* autodocument vault-keepass-import
+* implement --path
+* documentation typo fix
+
 1.0.10
 ------
 
