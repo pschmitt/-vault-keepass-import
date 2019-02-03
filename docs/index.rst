@@ -96,7 +96,6 @@ Testing the import
   .. code::
 
      $ vault-keepass-import --token mytoken \
-			    --vault http://127.0.0.1:8200 \
 			    --password kdbxpassword \
 			    database.kdbx
 
