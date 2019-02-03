@@ -39,6 +39,7 @@ pycryptodome==3.7.3
 pyflakes==2.0.0           # via flake8
 pygments==2.3.1           # via sphinx
 pyparsing==2.3.1          # via packaging
+pytest-mock==1.10.0
 pytest==4.1.1
 python-dateutil==2.7.5
 pytz==2018.9              # via babel

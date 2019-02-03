@@ -4,6 +4,7 @@ import hvac
 import pytest
 import requests
 import base64
+from tests.modified_environ import modified_environ
 
 
 def verify_withattachment(vault_server, kv_version):
@@ -235,3 +236,69 @@ def test_parser():
     assert type(parser) == argparse.ArgumentParser
     with pytest.raises(SystemExit):
         parser.parse_args(['--version'])
+
+
+def test_parse_args(mocker):
+    password_value = 'PASSWORD'
+    token_value = 'TOKEN'
+    with modified_environ(
+            'VAULT_ADDR',
+            'VAULT_SKIP_VERIFY',
+            'VAULT_CACERT',
+            'VAULT_CLIENT_CERT',
+            'VAULT_CLIENT_KEY',
+    ):
+        (args, token, password, verify) = main.parse_args([
+            'db.kdbx', '--password', password_value, '--token', token_value
+        ])
+        assert args.token == token_value
+        assert args.password == password_value
+        assert args.vault == main.DEFAULT_VAULT_ADDR
+        assert args.ssl_no_verify is False
+        assert args.ca_cert is None
+        assert args.client_cert is None
+        assert args.client_key is None
+        assert verify is True
+
+    addr = 'ADDR'
+    skip_verify = 'yes'
+    cacert = 'CACERT'
+    client_cert = 'CLIENT_CERT'
+    client_key = 'CLIENT_KEY'
+    with modified_environ(
+            VAULT_ADDR=addr,
+            VAULT_SKIP_VERIFY=skip_verify,
+            VAULT_CACERT=cacert,
+            VAULT_CLIENT_CERT=client_cert,
+            VAULT_CLIENT_KEY=client_key,
+    ):
+        (args, token, password, verify) = main.parse_args([
+            'db.kdbx', '--password', password_value, '--token', token_value
+        ])
+        assert args.token == token_value
+        assert args.password == password_value
+        assert args.vault == addr
+        assert args.ssl_no_verify is True
+        assert args.ca_cert == cacert
+        assert args.client_cert == client_cert
+        assert args.client_key == client_key
+        assert verify is False
+
+    (args, token, password, verify) = main.parse_args([
+        'db.kdbx', '--password', password_value, '--token', token_value,
+        '--ca-cert', cacert
+    ])
+    assert args.ca_cert == cacert
+    assert verify == cacert
+
+    getpass = mocker.patch('getpass.getpass')
+    (args, token, password, verify) = main.parse_args([
+        'db.kdbx', '--token', token_value,
+    ])
+    getpass.assert_called_once_with('KeePass password: ')
+
+    getpass = mocker.patch('getpass.getpass')
+    (args, token, password, verify) = main.parse_args([
+        'db.kdbx', '--password', password_value,
+    ])
+    getpass.assert_called_once_with('Vault token: ')

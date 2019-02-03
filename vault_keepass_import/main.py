@@ -13,6 +13,7 @@ from pykeepass import PyKeePass
 from vault_keepass_import.version import __version__
 import logging
 import os
+import sys
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s')
@@ -325,9 +326,9 @@ def parser():
     return parser
 
 
-def main():
-    args = parser().parse_args()
-    password = args.password if args.password else getpass.getpass()
+def parse_args(argv):
+    args = parser().parse_args(argv)
+    password = args.password if args.password else getpass.getpass('KeePass password: ')
     if args.token:
         # If provided argument is a file read from it
         if os.path.isfile(args.token):
@@ -345,7 +346,11 @@ def main():
             verify = args.ca_cert
         else:
             verify = True
+    return (args, token, password, verify)
 
+
+def main():
+    (args, token, password, verify) = parse_args(sys.argv[1:])
     importer = Importer(
         keepass_db=args.KDBX,
         keepass_password=password,
