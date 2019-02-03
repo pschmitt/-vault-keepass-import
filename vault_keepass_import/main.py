@@ -32,6 +32,8 @@ class Importer(object):
                  path='secret'):
         self.dry_run = dry_run
         self.path = path
+        if self.path.endswith('/'):
+            self.path = self.path[:-1]
         self.prefix = vault_prefix
         if not self.prefix.endswith('/'):
             self.prefix += '/'
