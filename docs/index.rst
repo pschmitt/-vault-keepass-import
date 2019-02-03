@@ -24,7 +24,7 @@ be imported as `group1/title1 (TJxu0nxlyEuaKYNYpi0NPQ==)` and
 if the title is unique.
 
 * `User name` from the `Entry` tab is imported as is under the key `username`
-* `Password` from the `Entry` tab is imported as is under the key `password`
+* `Password` from the `Entry` tab is imported as is under the key `url`
 * `URL` from the `Entry` tab is imported as is under the key `password`
 * `Notes` from the `Entry` tab is imported as is under the key `notes`
 * `Expires` from the `Entry` tab is imported under the key
