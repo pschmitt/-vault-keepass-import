@@ -19,7 +19,7 @@ import sys
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s')
 logger = logging.getLogger(__name__)
 
-DEFAULT_VAULT_ADDR = 'https://127.0.0.1:8200'
+DEFAULT_VAULT_ADDR = 'http://127.0.0.1:8200'
 
 
 class Importer(object):
@@ -247,7 +247,7 @@ def parser():
         '-v', '--vault',
         default=os.getenv('VAULT_ADDR', DEFAULT_VAULT_ADDR),
         required=False,
-        help=('Address of the Vault server. The default is https://127.0.0.1:8200. '
+        help=('Address of the Vault server. '
               'This can also be specified via the VAULT_ADDR environment variable.')
     )
     parser.add_argument(
