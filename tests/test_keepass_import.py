@@ -26,11 +26,14 @@ def verify_withattachment(vault_server, kv_version):
 
 
 def verify_expected_secrets(results, state):
-    assert results == {'keepass/Group1/title1group1': state,
-                       'keepass/Group1/Group1a/title1group1a': state,
-                       'keepass/withattachment': state,
-                       'keepass/title1 (TJxu0nxlyEuaKYNYpi0NPQ==)': state,
-                       'keepass/title1 (kFl/iRsoVUWDUdmmCDXwJg==)': state}
+    assert results == {
+        'keepass/Group1/title1group1': state,
+        'keepass/Group1/Group1a/title1group1a': state,
+        'keepass/withattachment': state,
+        'keepass/title1 (TJxu0nxlyEuaKYNYpi0NPQ==)': state,
+        'keepass/title1 (kFl/iRsoVUWDUdmmCDXwJg==)': state,
+        'keepass/Trailing whitespace1/Trailing whitespace2/Trailing whitespace3': state,
+    }
 
 
 def test_export_to_vault_imports_expected_fields(vault_server):

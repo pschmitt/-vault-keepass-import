@@ -23,6 +23,12 @@ be imported as `group1/title1 (TJxu0nxlyEuaKYNYpi0NPQ==)` and
 `group1/title1 (kFl/iRsoVUWDUdmmCDXwJg==)`. The `UUID` is not appended
 if the title is unique.
 
+All trailing whitespaces are trimmed, in each path component
+(i.e. **s|\s+/|/|g** and **s|\s+$||**). This is required because of a `bug in
+Vault 1.0.2 <https://github.com/hashicorp/vault/issues/6213>`_ that
+makes it impossible to list a path that ends with a whitespace via the
+CLI (the web UI works fine).
+
 * `User name` from the `Entry` tab is imported as is under the key `username`
 * `Password` from the `Entry` tab is imported as is under the key `password`
 * `URL` from the `Entry` tab is imported as is under the key `url`

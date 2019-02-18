@@ -13,6 +13,7 @@ from pykeepass import PyKeePass
 from vault_keepass_import.version import __version__
 import logging
 import os
+import re
 import sys
 
 
@@ -62,9 +63,13 @@ class Importer(object):
     def get_path(prefix, entry):
         path = entry.parentgroup.path
         if path[0] == '/':
-            return prefix + entry.title
+            path = prefix + entry.title
         else:
-            return prefix + path + '/' + entry.title
+            path = prefix + path + '/' + entry.title
+        # workaround https://github.com/hashicorp/vault/issues/6213
+        path = re.sub(r'\s+/', '/', path)
+        path = re.sub(r'\s+$', '', path)
+        return path
 
     def export_entries(self, force_lowercase):
         entries = collections.defaultdict(list)
@@ -126,7 +131,7 @@ class Importer(object):
             if getattr(e, k):
                 entry[k] = getattr(e, k)
         custom_properties = e.custom_properties
-        # remove this workaround when https://github.com/pschmitt/pykeepass/pull/138 is merged
+        # remove this workaround when pykeepass >= 3.0.3 is released
         if 'Notes' in custom_properties:
             del custom_properties['Notes']
         entry.update(custom_properties)
