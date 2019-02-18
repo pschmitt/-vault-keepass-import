@@ -1,6 +1,15 @@
 CHANGES
 =======
 
+1.0.13
+------
+
+* version 1.0.13
+* workaround Vault bug related to trailing whitespaces
+* the -dev vault server is not https, it is http
+* swap inverted url / password
+* docs: do not set the --vault option to the default value
+
 1.0.12
 ------
 
