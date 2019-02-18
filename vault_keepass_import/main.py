@@ -131,18 +131,14 @@ class Importer(object):
             if getattr(e, k):
                 entry[k] = getattr(e, k)
         custom_properties = e.custom_properties
-        # remove this workaround when pykeepass >= 3.0.3 is released
-        if 'Notes' in custom_properties:
-            del custom_properties['Notes']
         entry.update(custom_properties)
         if e.expires:
             entry['expiry_time'] = str(e.expiry_time.timestamp())
         for k in ('ctime', 'atime', 'mtime'):
             if getattr(e, k):
                 entry[k] = str(getattr(e, k).timestamp())
-        if hasattr(e, 'attachments'):  # implemented in pykeepass >= 3.0.3
-            for a in e.attachments:
-                entry[f'{a.id}/{a.filename}'] = base64.b64encode(a.data).decode('ascii')
+        for a in e.attachments:
+            entry[f'{a.id}/{a.filename}'] = base64.b64encode(a.data).decode('ascii')
         return entry
 
     @staticmethod
