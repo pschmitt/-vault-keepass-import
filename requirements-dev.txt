@@ -26,6 +26,7 @@ jinja2==2.10              # via sphinx
 lxml==4.3.0               # via pykeepass
 markupsafe==1.1.0         # via jinja2
 mccabe==0.6.1             # via flake8
+mock==2.0.0
 more-itertools==5.0.0     # via pytest
 packaging==19.0           # via sphinx
 pbr==5.1.1
@@ -45,7 +46,7 @@ python-dateutil==2.7.5    # via pykeepass
 pytz==2018.9              # via babel
 requests==2.21.0          # via hvac, sphinx
 sh==1.12.14
-six==1.12.0               # via argon2-cffi, more-itertools, packaging, pip-tools, pytest, python-dateutil, sphinx, tox
+six==1.12.0               # via argon2-cffi, mock, more-itertools, packaging, pip-tools, pytest, python-dateutil, sphinx, tox
 snowballstemmer==1.2.1    # via sphinx
 sphinx-argparse==0.2.5
 sphinx==1.8.3

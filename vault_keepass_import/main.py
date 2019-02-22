@@ -66,6 +66,11 @@ class Importer(object):
             path = prefix + entry.title
         else:
             path = prefix + path + '/' + entry.title
+        # replaced because it would be difficult for the user
+        # to type them in the CLI or the web UI
+        path = re.sub(r'[\x00-\x1f\x7f]', '_', path)
+        # workaround https://github.com/hashicorp/vault/issues/6282
+        path = re.sub(r'[#%*+(\\[]', '_', path)
         # workaround https://github.com/hashicorp/vault/issues/6213
         path = re.sub(r'\s+/', '/', path)
         path = re.sub(r'\s+$', '', path)

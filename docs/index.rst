@@ -25,9 +25,15 @@ if the title is unique.
 
 All trailing whitespaces are trimmed, in each path component
 (i.e. **s|\s+/|/|g** and **s|\s+$||**). This is required because of a `bug in
-Vault 1.0.2 <https://github.com/hashicorp/vault/issues/6213>`_ that
+Vault 1.0.2 <https://github.com/hashicorp/vault/issues/6213>`__ that
 makes it impossible to list a path that ends with a whitespace via the
 CLI (the web UI works fine).
+
+All unsafe characters (**#,%,*,+,(,[,\\**, the ascii range
+[\x00-\x1f\x7f]) are replaced with an underscore. The characters
+**#,%,*,+,(,[,\\** are considered unsafe because of a `bug in Vault
+1.0.2 <https://github.com/hashicorp/vault/issues/6282>`__.
+
 
 * `User name` from the `Entry` tab is imported as is under the key `username`
 * `Password` from the `Entry` tab is imported as is under the key `password`
