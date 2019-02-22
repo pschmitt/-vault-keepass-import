@@ -1,6 +1,12 @@
 CHANGES
 =======
 
+1.0.15
+------
+
+* version 1.0.15
+* replace unsafe characters with \_
+
 1.0.14
 ------
 
