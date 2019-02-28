@@ -1,0 +1,189 @@
+CHANGES
+=======
+
+2.0.0
+-----
+
+* version 2.0.0
+* use twine for releases
+* update the documentation to reflect the option changes
+* use hvac-cli to keep vault-keepass-import DRY
+* add dependency on hvac-cli
+* bump 1.0.16
+* % should always be escaped
+
+1.0.15
+------
+
+* version 1.0.15
+* replace unsafe characters with \_
+
+1.0.14
+------
+
+* version 1.0.14
+* upgrade to pykeepass 3.0.3
+
+1.0.13
+------
+
+* version 1.0.13
+* workaround Vault bug related to trailing whitespaces
+* the -dev vault server is not https, it is http
+* swap inverted url / password
+* docs: do not set the --vault option to the default value
+
+1.0.12
+------
+
+* version 1.0.12
+* strip trailing / from path
+* doc: fix typo
+* wrap RTD cell contents
+* move docutil.conf up one level
+* we need the readthedocs.yml after all to specify the latest image
+* formatting doc lines for readthedocs
+* look for the right sys.path (take 1)
+* doc needs the modules from the upper directory
+* readthedocs: add method pip
+* .readthedocs.yml only supports up to 3.6
+* use the latest .readthedocs.yml image
+* setup .readthedocs.yml so it reads requirements-dev.txt
+
+1.0.11
+------
+
+* version 1.0.11
+* simplify the examples in the documentation
+* add the modified\_environment context manager
+* test argument parsing
+* implement --version
+* copy/paste --help from vault
+* autodocument vault-keepass-import
+* implement --path
+* documentation typo fix
+
+1.0.10
+------
+
+* version 1.0.10
+* rework the title conflict resolution logic
+* verify\_expected\_secrets test helper to keep them DRY
+* remove --skip-root because it does not help make the paths shorter
+* remove --idempotent
+* remplace --backend with --prefix
+* implement --erase to recursively erase the secret prefix
+* add switch\_to\_kv\_v1 test helper
+* implement Importer.set\_verbosity
+* move dry-run to the contructor
+* rename backend into prefix and ensure it ends with /
+* implement --kv-version to force the KV version
+
+1.0.9
+-----
+
+* version 1.0.9
+* implement --dry-run and more informative log infos
+* upgrade to using sys.list\_mounted\_secrets\_engines
+* distinguish between 'new' and 'changed' entries
+* remove --erase because it does not actually erase anything
+
+1.0.8
+-----
+
+* version 1.0.8
+* add support for KV v1
+* move repeated arguments to \_\_init\_\_ to keep the Importer DRY
+* minimal refactor to convert functions into class methods
+* move the mapping of imported fields to the beginning
+
+1.0.7
+-----
+
+* version 1.0.7
+* import String Fields from the Advanced tab
+* --erase must remount KV in v2
+* add support for --ca-cert
+
+1.0.6
+-----
+
+* version 1.0.6
+* convert ctime/atime/mtime to strings
+
+1.0.5
+-----
+
+* version 1.0.5
+* attachments must be base64 encoded
+
+1.0.4
+-----
+
+* version 1.0.4
+* backward compatibility with pykeepass 3.0.2: no attachment
+* reduce verbosity and add the --verbose option
+* move the wait loop for the vault server in the fixture
+* workaround unexpected behavior for PyKeePass context manager
+* create the vault\_server fixture
+
+1.0.3
+-----
+
+* version 1.0.3
+* add support for attachments
+
+1.0.2
+-----
+
+* version 1.0.2
+* minimal documentation
+
+1.0.1
+-----
+
+* version 1.0.1
+* commit release 1.0.0
+* add documentation stub
+* ignore emacs backups
+* split developments and runtime requirements
+* restructure the repository so it looks like a module
+
+1.0.0
+-----
+
+* add support for client side SSL certificates
+* only export expiry\_time if expires is set
+* prefix the path with vault\_backend
+* posargs is useful for pytest, not so much for flake8
+* rework export\_to\_vault and add --idempotent
+* rework get\_next\_similar\_entry\_index and add a test
+* convert reset\_vault\_backend to KVv2
+* convert export\_entries() to pykeepass
+* implement the get\_path() helper
+* use pykeepass instead of libkeepass
+* add minimal tox & pytest based test and document it
+* fix python3 compatibility
+* flake8 fix
+* use kv v2 by default instead of kv v1
+* Invert behavior of --skip-root
+* Remove debug stuff
+* Fix -k option
+* Implement --skip-root to shorten the URLs of all entries
+* Fix: keys are always lowercased, even if not explicitely requested
+* Ignore pyinstaller files
+* Externalize entry\_name and path clean function
+* Remove leading and trailing forward slashes in both entry names and path
+* Display exact insert path in log
+* Formatting
+* Remove leading and trailing whitespace in both entry names and path
+* Don't overwrite entries if there are multiple that share the same name
+* Fix: title is not ignored
+* Add optional --keyfile arg to unlock the KeePass DB using a keyfile
+* Add --lowercase arg to force keys to be lowercased on import
+* Remove redundant 'Title' attribute
+* Add arg help messages
+* Import all fields, not just the password + Fix path for items in the root folder
+* Remove unused functions
+* GPL3
+* Import files
