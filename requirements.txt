@@ -14,7 +14,7 @@ cmd2==0.9.9               # via cliff, hvac-cli
 colorama==0.4.1           # via cmd2, hvac-cli
 construct==2.9.45         # via pykeepass
 future==0.17.1            # via pykeepass
-hvac-cli==1.0.5
+hvac-cli==1.0.6
 hvac==0.7.2
 idna==2.8                 # via hvac-cli, requests
 lxml==4.3.0               # via pykeepass
