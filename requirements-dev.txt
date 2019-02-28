@@ -7,20 +7,24 @@
 alabaster==0.7.12         # via sphinx
 argon2-cffi==19.1.0       # via pykeepass
 atomicwrites==1.2.1       # via pytest
-attrs==18.2.0             # via pytest
+attrs==18.2.0             # via cmd2, hvac-cli, pytest
 babel==2.6.0              # via sphinx
-certifi==2018.11.29       # via requests
+certifi==2018.11.29       # via hvac-cli, requests
 cffi==1.11.5              # via argon2-cffi
-chardet==3.0.4            # via requests
+chardet==3.0.4            # via hvac-cli, requests
 click==7.0                # via pip-tools
+cliff==2.14.0             # via hvac-cli
+cmd2==0.9.9               # via cliff, hvac-cli
+colorama==0.4.1           # via cmd2, hvac-cli
 construct==2.9.45         # via pykeepass
 coverage==4.5.2
 docutils==0.14            # via sphinx
 filelock==3.0.10          # via tox
 flake8==3.6.0
 future==0.17.1            # via pykeepass
+hvac-cli==1.0.5
 hvac==0.7.2
-idna==2.8                 # via requests
+idna==2.8                 # via hvac-cli, requests
 imagesize==1.1.0          # via sphinx
 jinja2==2.10              # via sphinx
 lxml==4.3.0               # via pykeepass
@@ -32,6 +36,7 @@ packaging==19.0           # via sphinx
 pbr==5.1.1
 pip-tools==3.3.2
 pluggy==0.8.1             # via pytest, tox
+prettytable==0.7.2        # via cliff, hvac-cli
 py==1.7.0                 # via pytest, tox
 pycodestyle==2.4.0        # via flake8
 pycparser==2.19           # via cffi
@@ -39,19 +44,23 @@ pycryptodome==3.7.3       # via pykeepass
 pyflakes==2.0.0           # via flake8
 pygments==2.3.1           # via sphinx
 pykeepass==3.0.3
-pyparsing==2.3.1          # via packaging
+pyparsing==2.3.1          # via cliff, hvac-cli, packaging
+pyperclip==1.7.0          # via cmd2, hvac-cli
 pytest-mock==1.10.0
 pytest==4.1.1
 python-dateutil==2.7.5    # via pykeepass
 pytz==2018.9              # via babel
-requests==2.21.0          # via hvac, sphinx
+pyyaml==3.13              # via cliff, hvac-cli
+requests==2.21.0          # via hvac, hvac-cli, sphinx
 sh==1.12.14
-six==1.12.0               # via argon2-cffi, mock, more-itertools, packaging, pip-tools, pytest, python-dateutil, sphinx, tox
+six==1.12.0               # via argon2-cffi, cliff, hvac-cli, mock, more-itertools, packaging, pip-tools, pytest, python-dateutil, sphinx, stevedore, tox
 snowballstemmer==1.2.1    # via sphinx
 sphinx-argparse==0.2.5
 sphinx==1.8.3
 sphinxcontrib-websupport==1.1.0  # via sphinx
+stevedore==1.30.0         # via cliff, hvac-cli
 toml==0.10.0              # via tox
 tox==3.7.0
-urllib3==1.24.1           # via requests
+urllib3==1.24.1           # via hvac-cli, requests
 virtualenv==16.3.0        # via tox
+wcwidth==0.1.7            # via cmd2, hvac-cli

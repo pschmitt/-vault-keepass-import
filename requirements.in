@@ -2,3 +2,4 @@ hvac==0.7.2
 sh==1.12.14
 pykeepass==3.0.3
 pbr==5.1.1
+hvac-cli==1.0.5

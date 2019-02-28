@@ -5,20 +5,31 @@
 #    pip-compile --output-file requirements.txt requirements.in
 #
 argon2-cffi==19.1.0       # via pykeepass
-certifi==2018.11.29       # via requests
+attrs==18.2.0             # via cmd2, hvac-cli
+certifi==2018.11.29       # via hvac-cli, requests
 cffi==1.11.5              # via argon2-cffi
-chardet==3.0.4            # via requests
+chardet==3.0.4            # via hvac-cli, requests
+cliff==2.14.0             # via hvac-cli
+cmd2==0.9.9               # via cliff, hvac-cli
+colorama==0.4.1           # via cmd2, hvac-cli
 construct==2.9.45         # via pykeepass
 future==0.17.1            # via pykeepass
+hvac-cli==1.0.5
 hvac==0.7.2
-idna==2.8                 # via requests
+idna==2.8                 # via hvac-cli, requests
 lxml==4.3.0               # via pykeepass
 pbr==5.1.1
+prettytable==0.7.2        # via cliff, hvac-cli
 pycparser==2.19           # via cffi
 pycryptodome==3.7.3       # via pykeepass
 pykeepass==3.0.3
+pyparsing==2.3.1          # via cliff, hvac-cli
+pyperclip==1.7.0          # via cmd2, hvac-cli
 python-dateutil==2.7.5    # via pykeepass
-requests==2.21.0          # via hvac
+pyyaml==3.13              # via cliff, hvac-cli
+requests==2.21.0          # via hvac, hvac-cli
 sh==1.12.14
-six==1.12.0               # via argon2-cffi, python-dateutil
-urllib3==1.24.1           # via requests
+six==1.12.0               # via argon2-cffi, cliff, hvac-cli, python-dateutil, stevedore
+stevedore==1.30.0         # via cliff, hvac-cli
+urllib3==1.24.1           # via hvac-cli, requests
+wcwidth==0.1.7            # via cmd2, hvac-cli
