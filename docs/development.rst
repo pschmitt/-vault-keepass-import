@@ -7,8 +7,7 @@ Release management
 
 * Publish a new version
 
- - python setup.py sdist upload --sign
- - git push ; git push --tags
+ - twine upload --username singuliere --password "$PYPI_PASSWORD" dist/vault-keepass-import-1.3.0.tar.gz
 
 * pypi maintenance
 
