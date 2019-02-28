@@ -1,6 +1,17 @@
 CHANGES
 =======
 
+2.0.0
+-----
+
+* version 2.0.0
+* use twine for releases
+* update the documentation to reflect the option changes
+* use hvac-cli to keep vault-keepass-import DRY
+* add dependency on hvac-cli
+* bump 1.0.16
+* % should always be escaped
+
 1.0.15
 ------
 
