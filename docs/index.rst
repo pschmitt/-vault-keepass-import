@@ -1,12 +1,16 @@
 Import KeePass secrets in Hashicorp Vault
 =========================================
 
+.. warning::
+   the version 2.0.0 introduced breaking changes, make sure to
+   read the `release notes <release-notes.html>`__
+
 `vault-keepass-import
 <https://lab.enough.community/singuliere/vault-keepass-import>`_ is a
 CLI to import `KeePass <https://keepass.info/>`_ secrets (using
 `pykeepass <https://github.com/pschmitt/pykeepass>`_) in `Hashicorp
 Vault <https://learn.hashicorp.com/vault/getting-started/install>`_
-(using `hvac <https://hvac.readthedocs.io>`_).
+(using `hvac-cli <https://hvac-cli.readthedocs.io>`_).
 
 Bugs and feature requests can be found `in the issue tracker
 <https://lab.enough.community/singuliere/vault-keepass-import/issues>`_
@@ -23,16 +27,20 @@ be imported as `group1/title1 (TJxu0nxlyEuaKYNYpi0NPQ==)` and
 `group1/title1 (kFl/iRsoVUWDUdmmCDXwJg==)`. The `UUID` is not appended
 if the title is unique.
 
-All trailing whitespaces are trimmed, in each path component
-(i.e. **s|\s+/|/|g** and **s|\s+$||**). This is required because of a `bug in
-Vault 1.0.2 <https://github.com/hashicorp/vault/issues/6213>`__ that
-makes it impossible to list a path that ends with a whitespace via the
-CLI (the web UI works fine).
+If the `--rewrite-key` option is specified it will workaround Vault web UI and
+CLI bugs by rewriting the key of each entries as follow:
 
-All unsafe characters (**#,%,*,+,(,[,\\**, the ascii range
-[\x00-\x1f\x7f]) are replaced with an underscore. The characters
-**#,%,*,+,(,[,\\** are considered unsafe because of a `bug in Vault
-1.0.2 <https://github.com/hashicorp/vault/issues/6282>`__.
+* All trailing whitespaces are trimmed, in each path component
+  (i.e. **s|\s+/|/|g** and **s|\s+$||**). This is required because of
+  a `bug in Vault 1.0.2, 1.0.3
+  <https://github.com/hashicorp/vault/issues/6213>`__ that makes it
+  impossible to list a path that ends with a whitespace via the CLI
+  (the web UI works fine).
+
+* All unsafe characters (**#,%,*,+,(,[,\\**, the ascii range
+  [\x00-\x1f\x7f]) are replaced with an underscore. The characters
+  **#,%,*,+,(,[,\\** are considered unsafe because of a `bug in Vault
+  1.0.2, 1.0.3 <https://github.com/hashicorp/vault/issues/6282>`__.
 
 
 * `User name` from the `Entry` tab is imported as is under the key `username`
@@ -126,3 +134,5 @@ Contributions
   :maxdepth: 2
 
   development
+  release-notes
+
